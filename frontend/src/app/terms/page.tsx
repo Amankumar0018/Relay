@@ -5,26 +5,26 @@ import { PublicFooter } from "@/components/public/PublicFooter";
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-paper text-ink selection:bg-copper-light selection:text-ink">
+    <div className="min-h-screen flex flex-col bg-raw-paper text-carbon selection:bg-signal-orange selection:text-raw-paper font-sans">
       <PublicNav />
 
       <main className="flex-1 py-16 px-4 sm:px-6">
-        <article className="max-w-3xl mx-auto space-y-8">
-          <header className="border-b border-rule pb-6 space-y-2">
-            <span className="text-[11px] font-sans uppercase tracking-widest text-olive font-medium">
-              Legal Agreement
+        <article className="max-w-4xl mx-auto space-y-8">
+          <header className="border-b-2 border-carbon pb-6 space-y-2">
+            <span className="font-mono text-xs uppercase tracking-widest text-signal-orange font-bold">
+              // LEGAL FRAMEWORK
             </span>
-            <h1 className="font-serif italic text-3xl sm:text-4xl font-bold text-ink">
+            <h1 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-carbon">
               Terms & Conditions of Service
             </h1>
-            <p className="text-xs font-mono text-ink-secondary">
-              Effective Date: November 4, 2024 • Version 1.0.0
+            <p className="font-mono text-xs text-carbon/60 uppercase">
+              EFFECTIVE DATE: NOVEMBER 4, 2024 • VERSION 2.0.0
             </p>
           </header>
 
-          <div className="space-y-6 text-xs sm:text-sm text-ink-secondary leading-relaxed font-sans">
-            <section className="space-y-2">
-              <h2 className="font-serif font-bold text-base text-ink">
+          <div className="space-y-6 text-xs sm:text-sm text-carbon/90 leading-relaxed font-sans">
+            <section className="space-y-2 p-5 border-2 border-carbon bg-raw-paper-light">
+              <h2 className="font-display font-bold text-base uppercase text-carbon">
                 1. Acceptance of Terms
               </h2>
               <p>
@@ -32,8 +32,8 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="space-y-2">
-              <h2 className="font-serif font-bold text-base text-ink">
+            <section className="space-y-2 p-5 border-2 border-carbon bg-raw-paper-light">
+              <h2 className="font-display font-bold text-base uppercase text-carbon">
                 2. Scope of Software & Intended Use
               </h2>
               <p>
@@ -44,11 +44,11 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="space-y-2">
-              <h2 className="font-serif font-bold text-base text-ink">
+            <section className="space-y-2 p-5 border-2 border-carbon bg-raw-paper-light">
+              <h2 className="font-display font-bold text-base uppercase text-carbon">
                 3. Customer Data & Intellectual Property Ownership
               </h2>
-              <ul className="list-disc pl-5 space-y-1">
+              <ul className="list-disc pl-5 space-y-1 font-mono text-xs text-carbon">
                 <li>
                   <strong>Customer Records:</strong> Customer retains exclusive and unencumbered ownership of all documents, files, contracts, board records, and data deposited into the Software.
                 </li>
@@ -61,42 +61,24 @@ export default function TermsPage() {
               </ul>
             </section>
 
-            <section className="space-y-2">
-              <h2 className="font-serif font-bold text-base text-ink">
+            <section className="space-y-2 p-5 border-2 border-carbon bg-raw-paper-light">
+              <h2 className="font-display font-bold text-base uppercase text-carbon">
                 4. Mandatory Human Verification (Switch Protocol)
               </h2>
               <p>
-                The Software employs specialized multi-agent models to categorize evidence and detect potential knowledge gaps. However, machine-generated inferences may contain inaccuracies, hallucinations, or incomplete context.
+                The Software employs specialized multi-agent models to categorize evidence and detect potential knowledge gaps. However, machine-generated inferences may contain inaccuracies or incomplete context.
               </p>
               <p>
                 Customer agrees that no legal action, financial transaction, employment decision, or contractual renewal termination shall be executed solely in reliance on automated agent output without independent human verification through the Switch review desk.
               </p>
             </section>
 
-            <section className="space-y-2">
-              <h2 className="font-serif font-bold text-base text-ink">
-                5. Local Deployment & Infrastructure Responsibilities
-              </h2>
-              <p>
-                When deployed on customer-managed hardware or virtual private clouds, Customer is solely responsible for maintaining appropriate infrastructure security, database backup routines, container access controls, and network firewalls surrounding the Docker host and persistent SQLite storage volumes.
-              </p>
-            </section>
-
-            <section className="space-y-2">
-              <h2 className="font-serif font-bold text-base text-ink">
-                6. Limitation of Liability
+            <section className="space-y-2 p-5 border-2 border-carbon bg-raw-paper-light">
+              <h2 className="font-display font-bold text-base uppercase text-carbon">
+                5. Limitation of Liability
               </h2>
               <p>
                 To the maximum extent permitted by applicable law, Relay Systems and its contributors shall not be liable for any indirect, incidental, consequential, special, or punitive damages arising out of or related to organizational transition failures, missed contract deadlines, regulatory penalties, or data loss occurring during system use.
-              </p>
-            </section>
-
-            <section className="space-y-2">
-              <h2 className="font-serif font-bold text-base text-ink">
-                7. Governing Law
-              </h2>
-              <p>
-                These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which Customer is incorporated, without regard to conflict of law principles.
               </p>
             </section>
           </div>
@@ -107,4 +89,3 @@ export default function TermsPage() {
     </div>
   );
 }
-

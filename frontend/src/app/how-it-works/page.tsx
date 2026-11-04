@@ -5,17 +5,9 @@ import Link from "next/link";
 import { PublicNav } from "@/components/public/PublicNav";
 import { PublicFooter } from "@/components/public/PublicFooter";
 import { Button } from "@/components/ui/Button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import {
   IconArrowRight,
-  IconDocument,
-  IconBrain,
-  IconShield,
-  IconNetwork,
   IconCheck,
-  IconAlert,
-  IconFileText,
-  IconUser,
 } from "@/components/ui/Icons";
 
 interface MethodologyPhase {
@@ -49,7 +41,7 @@ const PHASES: MethodologyPhase[] = [
     step: "02",
     name: "Cross-Examination & Gap Detection",
     tagline: "Subject records to adversarial consistency checks to surface contradictions and missing documentation.",
-    agent: "Continuity Detective (agent.detective.v1)",
+    agent: "Gap Detective (agent.detective.v1)",
     inputDescription: "Ingested entity graph, contractual milestones, and organizational authority delegations.",
     processingDetails: [
       "Compares assertions across conflicting documents (e.g. Master Services Agreement vs. Amendment 3).",
@@ -64,7 +56,7 @@ const PHASES: MethodologyPhase[] = [
     step: "03",
     name: "Obligation & Authority Mapping",
     tagline: "Chart every active obligation, financial threshold, and operational dependency to an explicit owner.",
-    agent: "Responsibility Analyst (agent.analyst.v1)",
+    agent: "Continuity Analyst (agent.analyst.v1)",
     inputDescription: "Verified milestones, recurring vendor renewals, and regulatory compliance schedules.",
     processingDetails: [
       "Identifies upcoming deadlines, notice windows, and auto-renewal triggers.",
@@ -94,7 +86,7 @@ const PHASES: MethodologyPhase[] = [
     step: "05",
     name: "Dossier Synthesis & Transition Blueprint",
     tagline: "Generate an executive-grade, evidence-backed handover dossier and 30-day operational blueprint.",
-    agent: "Dossier Architect (agent.architect.v1)",
+    agent: "Handover Architect (agent.architect.v1)",
     inputDescription: "Full concordance of verified facts, resolved anomalies, and confirmed responsibility vectors.",
     processingDetails: [
       "Compiles high-level Executive Transition Brief for board and leadership review.",
@@ -112,44 +104,44 @@ export default function HowItWorksPage() {
   const currentPhase = PHASES[activeStepIndex];
 
   return (
-    <div className="min-h-screen flex flex-col bg-paper text-ink selection:bg-copper-light selection:text-ink">
+    <div className="min-h-screen flex flex-col bg-raw-paper text-carbon selection:bg-signal-orange selection:text-raw-paper font-sans">
       <PublicNav />
 
       <main className="flex-1">
         {/* Header */}
-        <section className="border-b border-rule pt-16 pb-14 px-4 sm:px-6 bg-paper-surface">
-          <div className="max-w-4xl mx-auto space-y-4">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-paper border border-rule rounded-sm text-[11px] font-sans uppercase tracking-widest text-ink-secondary">
-              The Continuity Methodology
+        <section className="border-b-2 border-carbon pt-16 pb-14 px-4 sm:px-6 bg-raw-paper-light">
+          <div className="max-w-5xl mx-auto space-y-4">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-carbon text-raw-paper font-mono text-[10px] uppercase tracking-widest border border-carbon">
+              // METHODOLOGY MANUAL
             </div>
-            <h1 className="font-serif italic text-3xl sm:text-5xl font-bold text-ink tracking-tight">
+            <h1 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-carbon">
               How Relay engineers institutional continuity
             </h1>
-            <p className="text-sm sm:text-base text-ink-secondary leading-relaxed max-w-2xl font-light">
+            <p className="text-sm sm:text-base text-carbon/80 leading-relaxed max-w-2xl font-sans">
               Transition management should not rely on oral tradition or hasty exit interviews. Relay transforms messy historical documents into a verifiable, structured operational handover.
             </p>
           </div>
         </section>
 
         {/* The 5-Phase Interactive Stepper */}
-        <section className="py-16 px-4 sm:px-6 border-b border-rule">
+        <section className="py-16 px-4 sm:px-6 border-b-2 border-carbon">
           <div className="max-w-5xl mx-auto space-y-10">
             {/* Phase Selector Tabs */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 border-b border-rule pb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 border-b-2 border-carbon pb-4">
               {PHASES.map((phase, idx) => (
                 <button
                   key={phase.step}
                   onClick={() => setActiveStepIndex(idx)}
-                  className={`text-left p-3 rounded-sm border transition-all ${
+                  className={`text-left p-3 border-2 transition-all font-mono ${
                     activeStepIndex === idx
-                      ? "bg-paper-surface border-ink/40 shadow-xs"
-                      : "bg-paper border-rule/80 hover:border-rule text-ink-secondary"
+                      ? "bg-carbon text-raw-paper border-carbon shadow-brutal translate-y-[-2px]"
+                      : "bg-raw-paper-light text-carbon border-carbon/40 hover:border-carbon"
                   }`}
                 >
-                  <span className="text-[10px] font-mono font-bold block text-copper">
-                    Phase {phase.step}
+                  <span className="text-[10px] font-bold block text-signal-orange">
+                    PHASE {phase.step}
                   </span>
-                  <span className="text-xs font-serif font-bold text-ink mt-0.5 line-clamp-1">
+                  <span className="text-xs font-display font-bold uppercase mt-0.5 line-clamp-1">
                     {phase.name}
                   </span>
                 </button>
@@ -157,43 +149,43 @@ export default function HowItWorksPage() {
             </div>
 
             {/* Active Phase Deep Dive */}
-            <Card className="bg-paper-surface border-rule p-6 sm:p-8 space-y-6">
-              <div className="space-y-2 border-b border-rule pb-5">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-sm bg-copper-light border border-copper-border text-copper text-xs font-mono font-bold">
-                    Phase {currentPhase.step}
+            <div className="bg-raw-paper-light border-2 border-carbon p-6 sm:p-8 space-y-6 shadow-brutal">
+              <div className="space-y-2 border-b-2 border-carbon pb-5">
+                <div className="flex items-center gap-2 font-mono text-xs">
+                  <span className="px-2 py-0.5 bg-signal-orange text-raw-paper font-bold">
+                    PHASE {currentPhase.step}
                   </span>
-                  <span className="text-xs font-mono text-ink-secondary">
-                    {currentPhase.agent}
+                  <span className="text-carbon/60 uppercase">
+                    // {currentPhase.agent}
                   </span>
                 </div>
-                <h2 className="font-serif italic text-2xl sm:text-3xl font-bold text-ink">
+                <h2 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight text-carbon">
                   {currentPhase.name}
                 </h2>
-                <p className="text-sm text-ink-secondary font-light">
+                <p className="text-sm text-carbon/80 font-sans">
                   {currentPhase.tagline}
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-mono text-xs">
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-xs font-sans uppercase tracking-wider text-ink font-bold mb-1.5">
-                      Input Materials
+                    <h3 className="text-xs uppercase tracking-wider text-carbon font-bold mb-1.5">
+                      INPUT MATERIALS
                     </h3>
-                    <p className="text-xs text-ink-secondary leading-relaxed bg-paper p-3 border border-rule rounded-sm">
+                    <p className="text-xs text-carbon/80 leading-relaxed bg-raw-paper p-3.5 border border-carbon">
                       {currentPhase.inputDescription}
                     </p>
                   </div>
 
                   <div>
-                    <h3 className="text-xs font-sans uppercase tracking-wider text-ink font-bold mb-1.5">
-                      Analytical Procedures
+                    <h3 className="text-xs uppercase tracking-wider text-carbon font-bold mb-1.5">
+                      ANALYTICAL PROCEDURES
                     </h3>
-                    <ul className="space-y-2 text-xs text-ink-secondary">
+                    <ul className="space-y-2 text-xs text-carbon/80 font-sans">
                       {currentPhase.processingDetails.map((detail, idx) => (
                         <li key={idx} className="flex items-start gap-2">
-                          <IconCheck className="w-3.5 h-3.5 text-olive shrink-0 mt-0.5" />
+                          <IconCheck size={14} className="text-industrial-green shrink-0 mt-0.5" />
                           <span>{detail}</span>
                         </li>
                       ))}
@@ -203,98 +195,60 @@ export default function HowItWorksPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-xs font-sans uppercase tracking-wider text-ink font-bold mb-1.5">
-                      Output Deliverable
+                    <h3 className="text-xs uppercase tracking-wider text-carbon font-bold mb-1.5">
+                      OUTPUT DELIVERABLE
                     </h3>
-                    <div className="p-3 bg-paper-secondary border border-rule rounded-sm text-xs font-mono text-ink">
+                    <div className="p-3 bg-concrete border border-carbon font-bold text-carbon">
                       {currentPhase.outputArtifact}
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-xs font-sans uppercase tracking-wider text-ink font-bold mb-1.5">
-                      Real-World Outcome (Acme BioSystems Case)
+                    <h3 className="text-xs uppercase tracking-wider text-carbon font-bold mb-1.5">
+                      REAL-WORLD OUTCOME (ACME BIOSYSTEMS CASE)
                     </h3>
-                    <div className="p-3 bg-paper border-l-2 border-olive text-xs text-ink leading-relaxed">
+                    <div className="p-3.5 bg-raw-paper border-l-4 border-signal-orange text-xs text-carbon font-sans leading-relaxed">
                       {currentPhase.exampleOutcome}
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-rule flex items-center justify-between">
+              <div className="pt-4 border-t-2 border-carbon flex items-center justify-between font-mono text-xs">
                 <button
                   onClick={() => setActiveStepIndex((prev) => Math.max(0, prev - 1))}
                   disabled={activeStepIndex === 0}
-                  className="text-xs font-sans text-ink-secondary hover:text-ink disabled:opacity-40 disabled:hover:text-ink-secondary"
+                  className="text-carbon hover:text-signal-orange uppercase font-bold disabled:opacity-40"
                 >
                   ← Previous Phase
                 </button>
-                <span className="text-xs font-mono text-ink-disabled">
-                  {activeStepIndex + 1} of {PHASES.length}
+                <span className="text-carbon/60">
+                  [{activeStepIndex + 1} OF {PHASES.length}]
                 </span>
                 <button
                   onClick={() => setActiveStepIndex((prev) => Math.min(PHASES.length - 1, prev + 1))}
                   disabled={activeStepIndex === PHASES.length - 1}
-                  className="text-xs font-sans text-ink-secondary hover:text-ink disabled:opacity-40 disabled:hover:text-ink-secondary"
+                  className="text-carbon hover:text-signal-orange uppercase font-bold disabled:opacity-40"
                 >
                   Next Phase →
                 </button>
-              </div>
-            </Card>
-          </div>
-        </section>
-
-        {/* Core Principles */}
-        <section className="py-16 px-4 sm:px-6 bg-paper-surface">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <h2 className="font-serif italic text-2xl sm:text-3xl font-bold text-ink text-center">
-              Our Core Continuity Principles
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-              <div className="space-y-2">
-                <h3 className="font-serif font-bold text-sm text-ink">
-                  1. Evidence Over Recall
-                </h3>
-                <p className="text-xs text-ink-secondary leading-relaxed">
-                  Memory fades and opinions conflict. Every assertion must be anchored in an immutable documentary source or explicitly acknowledged as missing.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-serif font-bold text-sm text-ink">
-                  2. No Autonomous Unvetted Release
-                </h3>
-                <p className="text-xs text-ink-secondary leading-relaxed">
-                  AI agents synthesize, cross-examine, and flag anomalies, but humans retain absolute editorial authority over final handover dossiers.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-serif font-bold text-sm text-ink">
-                  3. Continuity As An Operational Asset
-                </h3>
-                <p className="text-xs text-ink-secondary leading-relaxed">
-                  Transitions are not mere HR offboarding rituals. They are mission-critical operational handovers that determine organizational longevity.
-                </p>
               </div>
             </div>
           </div>
         </section>
 
         {/* CTA */}
-        <section className="py-16 px-4 sm:px-6 border-t border-rule text-center">
+        <section className="py-16 px-4 sm:px-6 bg-carbon text-raw-paper text-center">
           <div className="max-w-xl mx-auto space-y-4">
-            <h2 className="font-serif italic text-2xl sm:text-3xl font-bold text-ink">
+            <h2 className="font-display font-black text-2xl sm:text-4xl uppercase tracking-tight text-raw-paper">
               Ready to safeguard your organization?
             </h2>
-            <p className="text-xs sm:text-sm text-ink-secondary">
+            <p className="text-xs sm:text-sm text-raw-paper/70 font-sans">
               Explore the Acme BioSystems demonstration workspace or configure a custom transition dossier.
             </p>
             <div className="pt-2">
               <Link href="/app">
-                <Button variant="primary" size="md">
+                <Button variant="signal" size="md">
                   Enter Organizational Workspace
                   <IconArrowRight className="ml-2 w-4 h-4" />
                 </Button>
@@ -308,4 +262,3 @@ export default function HowItWorksPage() {
     </div>
   );
 }
-

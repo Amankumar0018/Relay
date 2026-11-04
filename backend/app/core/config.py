@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
     DATABASE_URL: str = "sqlite:///./relay.db"
+    UPLOAD_DIR: str = "data/uploads"
+    MAX_FILE_SIZE_BYTES: int = 25 * 1024 * 1024  # 25 MB
+    ALLOWED_EXTENSIONS: List[str] = [".pdf", ".docx", ".txt"]
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",

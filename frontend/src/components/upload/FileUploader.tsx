@@ -134,16 +134,16 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Archival Drop Zone */}
+      {/* Industrial Drop Zone */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`border border-dashed rounded p-6 sm:p-8 text-center cursor-pointer transition-colors bg-paper-surface ${
+        className={`border-2 border-dashed p-6 sm:p-8 text-center cursor-pointer transition-all bg-raw-paper-light ${
           isDragging
-            ? "border-olive bg-olive-light/50"
-            : "border-rule hover:border-ink-secondary hover:bg-paper-secondary/40"
+            ? "border-signal-orange bg-signal-orange/10 shadow-brutal"
+            : "border-carbon hover:border-signal-orange hover:bg-concrete/30"
         }`}
         role="button"
         tabIndex={0}
@@ -164,16 +164,16 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           aria-hidden="true"
         />
 
-        <div className="flex flex-col items-center justify-center space-y-2">
-          <div className="w-10 h-10 rounded bg-paper-secondary border border-rule flex items-center justify-center text-ink-secondary">
-            <IconUpload size={20} />
+        <div className="flex flex-col items-center justify-center space-y-3">
+          <div className="w-12 h-12 bg-carbon text-raw-paper flex items-center justify-center border border-carbon shadow-brutal">
+            <IconUpload size={22} />
           </div>
           <div>
-            <div className="text-sm font-sans font-semibold text-ink">
-              Select or drop organizational records here
+            <div className="font-display font-bold text-sm text-carbon uppercase tracking-wider">
+              Deposit Institutional Records
             </div>
-            <p className="text-xs text-ink-secondary mt-0.5">
-              Accepted formats: PDF, DOCX, TXT up to {maxFileSizeMb}MB per file.
+            <p className="font-mono text-xs text-carbon/70 mt-1">
+              Select or drag PDF, DOCX, TXT archives • Max {maxFileSizeMb}MB per file
             </p>
           </div>
         </div>
@@ -181,12 +181,12 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
 
       {/* Error alert */}
       {errorMessage && (
-        <div className="flex items-start gap-2.5 p-3 rounded bg-copper-light border border-copper-border text-xs text-copper-dark">
-          <IconAlert size={16} className="shrink-0 mt-0.5 text-copper" />
-          <div className="flex-1 leading-relaxed">{errorMessage}</div>
+        <div className="flex items-start gap-2.5 p-3.5 bg-signal-orange text-raw-paper border-2 border-carbon text-xs font-mono">
+          <IconAlert size={16} className="shrink-0 mt-0.5" />
+          <div className="flex-1 leading-relaxed font-bold">{errorMessage}</div>
           <button
             onClick={() => setErrorMessage(null)}
-            className="text-copper hover:text-copper-dark"
+            className="text-raw-paper hover:text-carbon"
           >
             <IconClose size={14} />
           </button>
@@ -196,36 +196,36 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
       {/* Staged files */}
       {stagedFiles.length > 0 && (
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs font-sans">
-            <span className="font-semibold text-ink">
-              Staged Records ({stagedFiles.length})
+          <div className="flex items-center justify-between text-xs font-mono">
+            <span className="font-bold text-carbon uppercase">
+              // STAGED INTAKE BUFFER ({stagedFiles.length})
             </span>
             <button
               onClick={clearAll}
-              className="text-copper hover:underline text-xs"
+              className="text-signal-orange hover:underline text-xs font-bold uppercase"
             >
-              Clear all
+              Flush All
             </button>
           </div>
 
-          <div className="divide-y divide-rule/80 border border-rule rounded bg-paper-surface overflow-hidden">
+          <div className="divide-y divide-carbon/30 border-2 border-carbon bg-raw-paper-light">
             {stagedFiles.map((file) => (
               <div
                 key={file.id}
-                className="flex items-center justify-between p-3 text-xs hover:bg-paper-secondary/40 transition-colors"
+                className="flex items-center justify-between p-3 text-xs hover:bg-concrete/40 transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-7 h-7 rounded bg-paper-secondary border border-rule flex items-center justify-center text-ink-secondary shrink-0">
+                  <div className="w-7 h-7 bg-carbon text-raw-paper flex items-center justify-center shrink-0">
                     <IconDocument size={14} />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-ink truncate max-w-sm sm:max-w-md">
+                    <p className="font-semibold text-carbon truncate max-w-sm sm:max-w-md">
                       {file.name}
                     </p>
-                    <div className="flex items-center gap-2 text-ink-secondary text-[11px] mt-0.5">
+                    <div className="flex items-center gap-2 text-carbon/70 font-mono text-[11px] mt-0.5">
                       <span>{formatBytes(file.size)}</span>
                       <span>•</span>
-                      <span className="uppercase text-[10px] text-ink-secondary bg-paper-secondary px-1 py-0.2 rounded border border-rule">
+                      <span className="uppercase text-[10px] text-raw-paper bg-carbon px-1.5 py-0.5 font-bold">
                         {file.type}
                       </span>
                     </div>
@@ -233,12 +233,12 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-[11px] text-ink-secondary italic hidden sm:inline">
-                    Staged in memory
+                  <span className="text-[11px] font-mono text-carbon/60 uppercase hidden sm:inline">
+                    Local Session
                   </span>
                   <button
                     onClick={() => removeFile(file.id)}
-                    className="p-1 text-ink-secondary hover:text-copper rounded"
+                    className="p-1 text-carbon hover:text-signal-orange"
                     aria-label={`Remove ${file.name}`}
                   >
                     <IconClose size={14} />
@@ -248,10 +248,10 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
             ))}
           </div>
 
-          <div className="flex items-start gap-2 p-3 rounded bg-paper-secondary border border-rule text-xs text-ink-secondary">
-            <IconInfo size={16} className="text-olive shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 p-3 bg-concrete/40 border border-carbon text-xs text-carbon font-mono">
+            <IconInfo size={16} className="text-carbon shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              <strong className="text-ink">Operational note:</strong> Files selected here are staged in local browser memory for this session. Direct ingestion into the persistent FastAPI backend will connect once the upload API endpoint is finalized.
+              <strong className="text-carbon font-bold">BUFFER STATUS:</strong> Ingested files are validated client-side and staged in memory for milestone extraction into persistent SQLite storage.
             </p>
           </div>
         </div>

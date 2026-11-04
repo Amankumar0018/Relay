@@ -44,7 +44,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <ToastContext.Provider value={{ addToast, removeToast }}>
       {children}
-      <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none">
+      <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm pointer-events-none">
         <AnimatePresence>
           {toasts.map((toast) => (
             <motion.div
@@ -52,42 +52,42 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
               initial={{ opacity: 0, y: 15, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.96 }}
-              transition={{ duration: 0.2 }}
-              className="pointer-events-auto flex items-start gap-3 p-3.5 rounded-sm bg-paper-surface border border-rule shadow-lg text-xs"
+              transition={{ duration: 0.15 }}
+              className="pointer-events-auto flex items-start gap-3 p-3.5 bg-raw-paper-light border-2 border-carbon shadow-brutal text-xs font-mono"
             >
               <div className="shrink-0 mt-0.5">
                 {toast.type === "success" && (
-                  <span className="text-olive flex items-center justify-center">
-                    <IconCheck size={16} />
+                  <span className="w-5 h-5 bg-industrial-green text-raw-paper flex items-center justify-center border border-carbon">
+                    <IconCheck size={12} />
                   </span>
                 )}
                 {toast.type === "error" && (
-                  <span className="text-copper flex items-center justify-center">
-                    <IconAlert size={16} />
+                  <span className="w-5 h-5 bg-signal-orange text-raw-paper flex items-center justify-center border border-carbon">
+                    <IconAlert size={12} />
                   </span>
                 )}
                 {toast.type === "amber" && (
-                  <span className="text-copper flex items-center justify-center">
-                    <IconAlert size={16} />
+                  <span className="w-5 h-5 bg-signal-yellow text-carbon flex items-center justify-center border border-carbon">
+                    <IconAlert size={12} />
                   </span>
                 )}
                 {(!toast.type || toast.type === "info") && (
-                  <span className="text-ink-secondary flex items-center justify-center">
-                    <IconInfo size={16} />
+                  <span className="w-5 h-5 bg-carbon text-raw-paper flex items-center justify-center border border-carbon">
+                    <IconInfo size={12} />
                   </span>
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-ink">{toast.title}</p>
+                <p className="font-bold text-carbon uppercase tracking-wider">{toast.title}</p>
                 {toast.description && (
-                  <p className="text-ink-secondary mt-0.5 leading-relaxed">
+                  <p className="text-carbon/80 mt-1 leading-relaxed font-sans text-xs">
                     {toast.description}
                   </p>
                 )}
               </div>
               <button
                 onClick={() => removeToast(toast.id)}
-                className="text-ink-secondary hover:text-ink p-0.5 shrink-0 transition-colors"
+                className="text-carbon hover:text-signal-orange p-0.5 shrink-0 transition-colors"
                 aria-label="Dismiss toast"
               >
                 <IconClose size={14} />

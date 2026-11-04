@@ -4,14 +4,13 @@ import "./globals.css";
 
 const archivo = Archivo({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-archivo",
   display: "swap",
 });
 
 const ibmPlexSans = IBM_Plex_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-ibm-plex-sans",
   display: "swap",
 });

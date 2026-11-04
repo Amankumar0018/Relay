@@ -45,6 +45,10 @@ ENV/
 *.sqlite3-journal
 *.sqlite3-wal
 *.sqlite3-shm
+data/uploads/*
+!data/uploads/.gitkeep
+backend/data/uploads/*
+!backend/data/uploads/.gitkeep
 
 # Node / Next.js
 node_modules/

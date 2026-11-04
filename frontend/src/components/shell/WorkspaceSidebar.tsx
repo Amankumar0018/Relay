@@ -12,11 +12,11 @@ import {
   IconDossier,
   IconSettings,
   IconClose,
-  IconBuilding,
   IconExternal,
 } from "@/components/ui/Icons";
 
 interface NavItem {
+  number: string;
   name: string;
   href: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
@@ -24,13 +24,13 @@ interface NavItem {
 }
 
 const PRIMARY_NAV: NavItem[] = [
-  { name: "Overview", href: "/app", icon: IconArchive },
-  { name: "Knowledge Archive", href: "/app/archive", icon: IconArchive },
-  { name: "Continuity Map", href: "/app/map", icon: IconNetwork },
-  { name: "Investigations", href: "/app/investigations", icon: IconInvestigation, badge: "3 open" },
-  { name: "Responsibilities", href: "/app/responsibilities", icon: IconTask, badge: "4 active" },
-  { name: "Agent Collaboration", href: "/app/agents", icon: IconAgent },
-  { name: "Handover Dossiers", href: "/app/handovers", icon: IconDossier },
+  { number: "01", name: "Overview", href: "/app", icon: IconArchive },
+  { number: "02", name: "Knowledge Archive", href: "/app/archive", icon: IconArchive },
+  { number: "03", name: "Continuity Map", href: "/app/map", icon: IconNetwork },
+  { number: "04", name: "Investigations", href: "/app/investigations", icon: IconInvestigation, badge: "3 OPEN" },
+  { number: "05", name: "Responsibilities", href: "/app/responsibilities", icon: IconTask, badge: "4 ACT" },
+  { number: "06", name: "Agent Collaboration", href: "/app/agents", icon: IconAgent },
+  { number: "07", name: "Handover Dossiers", href: "/app/handovers", icon: IconDossier },
 ];
 
 interface WorkspaceSidebarProps {
@@ -46,59 +46,63 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ isOpen, onCl
       {/* Mobile backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-ink/40 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-40 bg-carbon/80 backdrop-blur-xs lg:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-paper-secondary border-r border-rule flex flex-col transition-transform duration-150 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-raw-paper border-r-2 border-carbon flex flex-col transition-transform duration-150 ease-in-out lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Brand & Organization Block */}
-        <div className="p-4 border-b border-rule">
+        <div className="p-4 border-b-2 border-carbon bg-raw-paper-light">
           <div className="flex items-center justify-between">
             <Link href="/" className="inline-block group">
-              <span className="font-serif italic text-xl font-bold tracking-tight text-ink">
-                Relay
-              </span>
-              <span className="block text-[10px] font-sans uppercase tracking-widest text-ink-secondary">
-                Institutional Memory
+              <div className="flex items-center gap-2">
+                <span className="w-4 h-4 bg-signal-orange border border-carbon" />
+                <span className="font-display font-black text-xl tracking-tight text-carbon uppercase">
+                  Relay
+                </span>
+              </div>
+              <span className="block font-mono text-[9px] uppercase tracking-widest text-carbon/60 mt-0.5">
+                // INDUSTRIAL CONTINUITY
               </span>
             </Link>
             <button
               onClick={onClose}
-              className="p-1 rounded text-ink-secondary hover:text-ink lg:hidden"
+              className="p-1 text-carbon hover:text-signal-orange lg:hidden"
               aria-label="Close navigation"
             >
-              <IconClose size={16} />
+              <IconClose size={18} />
             </button>
           </div>
 
-          <div className="mt-3 p-2 rounded bg-paper-surface border border-rule/80">
-            <div className="flex items-center gap-2">
-              <IconBuilding size={14} className="text-olive shrink-0" />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-ink truncate">
-                  Acme BioSystems
-                </p>
-                <p className="text-[11px] text-ink-secondary truncate">
-                  CSO Transition 2026
-                </p>
-              </div>
+          <div className="mt-3 p-2.5 bg-concrete/60 border border-carbon">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[10px] uppercase font-bold text-signal-orange">
+                NODE #04
+              </span>
+              <span className="w-2 h-2 bg-industrial-green border border-carbon animate-pulse" />
             </div>
+            <p className="font-display font-bold text-xs uppercase text-carbon mt-1 truncate">
+              Acme BioSystems
+            </p>
+            <p className="font-mono text-[10px] text-carbon/70 truncate">
+              CSO TRANSITION 2026
+            </p>
           </div>
         </div>
 
         {/* Primary Navigation */}
         <div className="p-3 flex-1 overflow-y-auto space-y-4">
           <div>
-            <div className="px-2 pb-1 text-[10px] uppercase font-semibold tracking-wider text-ink-secondary">
-              Continuity Management
+            <div className="px-2 pb-1 font-mono text-[9px] uppercase font-bold tracking-widest text-carbon/50">
+              [SYSTEM MODULES]
             </div>
-            <nav className="space-y-0.5 mt-1">
+            <nav className="space-y-1 mt-1">
               {PRIMARY_NAV.map((item) => {
                 const Icon = item.icon;
                 const isActive =
@@ -111,25 +115,30 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ isOpen, onCl
                     key={item.href}
                     href={item.href}
                     onClick={onClose}
-                    className={`flex items-center justify-between px-2.5 py-1.5 rounded text-xs transition-colors ${
+                    className={`flex items-center justify-between px-3 py-2 text-xs font-mono transition-all border ${
                       isActive
-                        ? "bg-paper-surface font-semibold text-ink border border-rule shadow-sm"
-                        : "text-ink-secondary hover:bg-paper hover:text-ink"
+                        ? "bg-carbon text-raw-paper border-carbon font-bold shadow-brutal translate-x-[2px]"
+                        : "text-carbon border-transparent hover:bg-concrete/60 hover:border-carbon"
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <Icon
-                        size={15}
-                        className={isActive ? "text-olive" : "text-ink-secondary"}
-                      />
-                      <span className="truncate">{item.name}</span>
+                      <span
+                        className={`text-[10px] ${
+                          isActive ? "text-signal-orange font-bold" : "text-carbon/50"
+                        }`}
+                      >
+                        {item.number}
+                      </span>
+                      <span className="truncate uppercase font-bold tracking-tight">
+                        {item.name}
+                      </span>
                     </div>
                     {item.badge && (
                       <span
-                        className={`text-[10px] px-1.5 py-0.2 rounded border font-sans ${
-                          item.badge.includes("open")
-                            ? "bg-copper-light text-copper-dark border-copper-border"
-                            : "bg-paper text-ink-secondary border-rule"
+                        className={`text-[9px] px-1.5 py-0.2 border font-mono font-bold uppercase ${
+                          isActive
+                            ? "bg-signal-orange text-raw-paper border-carbon"
+                            : "bg-signal-orange/20 text-signal-orange border-signal-orange/40"
                         }`}
                       >
                         {item.badge}
@@ -143,30 +152,29 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ isOpen, onCl
         </div>
 
         {/* Sidebar Footer */}
-        <div className="p-3 border-t border-rule space-y-1 bg-paper-secondary">
+        <div className="p-3 border-t-2 border-carbon space-y-1.5 bg-raw-paper-light">
           <Link
             href="/app/settings"
             onClick={onClose}
-            className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded text-xs transition-colors ${
+            className={`flex items-center gap-2.5 px-3 py-1.5 text-xs font-mono uppercase transition-colors border ${
               pathname === "/app/settings"
-                ? "bg-paper-surface font-semibold text-ink border border-rule"
-                : "text-ink-secondary hover:text-ink hover:bg-paper"
+                ? "bg-carbon text-raw-paper border-carbon font-bold"
+                : "text-carbon border-transparent hover:bg-concrete/60 hover:border-carbon"
             }`}
           >
-            <IconSettings size={15} />
-            <span>Workspace Settings</span>
+            <IconSettings size={14} />
+            <span>Workspace Config</span>
           </Link>
 
           <Link
             href="/"
-            className="flex items-center justify-between px-2.5 py-1.5 rounded text-xs text-ink-secondary hover:text-ink hover:bg-paper transition-colors"
+            className="flex items-center justify-between px-3 py-1.5 text-xs font-mono text-carbon/70 hover:text-carbon hover:bg-concrete/40 transition-colors uppercase"
           >
-            <span>Public Overview</span>
-            <IconExternal size={13} />
+            <span>Public Website</span>
+            <IconExternal size={12} />
           </Link>
         </div>
       </aside>
     </>
   );
 };
-

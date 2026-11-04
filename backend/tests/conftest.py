@@ -29,6 +29,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
+    import app.models  # noqa: F401 - ensure models are registered on Base.metadata
     Base.metadata.create_all(bind=test_engine)
     yield
     Base.metadata.drop_all(bind=test_engine)
@@ -48,7 +49,12 @@ def db_session() -> Generator[Session, None, None]:
 
 
 @pytest.fixture
-def client(db_session: Session) -> Generator[TestClient, None, None]:
+def client(db_session: Session, tmp_path, monkeypatch) -> Generator[TestClient, None, None]:
+    # Ensure test uploads are isolated to a temporary directory
+    test_upload_dir = tmp_path / "uploads"
+    test_upload_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr("app.core.config.settings.UPLOAD_DIR", str(test_upload_dir))
+
     def override_get_db():
         try:
             yield db_session

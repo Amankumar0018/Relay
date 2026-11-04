@@ -24,60 +24,60 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-ink/40 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-carbon/75 backdrop-blur-xs transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Modal Dialog */}
       <div
-        className="relative w-full max-w-2xl bg-paper-surface rounded-sm shadow-xl border border-rule overflow-hidden z-10"
+        className="relative w-full max-w-2xl bg-raw-paper-light border-2 border-carbon shadow-brutal-lg overflow-hidden z-10"
         role="dialog"
         aria-modal="true"
         aria-labelledby="upload-modal-title"
       >
-        <div className="flex items-center justify-between p-4 px-6 border-b border-rule bg-paper">
+        <div className="flex items-center justify-between p-4 px-6 border-b-2 border-carbon bg-carbon text-raw-paper">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-sm bg-copper-light border border-copper-border flex items-center justify-center text-copper">
-              <IconUpload size={16} />
+            <div className="w-8 h-8 bg-signal-orange text-raw-paper flex items-center justify-center border border-carbon font-mono font-bold text-xs">
+              REC
             </div>
             <div>
               <h2
                 id="upload-modal-title"
-                className="text-sm sm:text-base font-serif font-bold text-ink"
+                className="font-display font-bold text-sm sm:text-base uppercase tracking-wider"
               >
-                Deposit Organizational Records
+                Deposit Institutional Records
               </h2>
-              <p className="text-xs text-ink-secondary">
-                Stage PDF, DOCX, or TXT archives for extraction and cross-examination.
+              <p className="font-mono text-xs text-raw-paper/70">
+                Stage archival files for multi-agent evidence cross-examination.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-sm text-ink-secondary hover:text-ink hover:bg-paper-secondary transition-colors"
+            className="p-1 text-raw-paper hover:text-signal-orange transition-colors"
             aria-label="Close dialog"
           >
-            <IconClose size={16} />
+            <IconClose size={18} />
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 bg-raw-paper">
           <FileUploader onFilesSelected={setCurrentFiles} />
         </div>
 
-        <div className="flex items-center justify-between p-4 px-6 border-t border-rule bg-paper-secondary/60">
-          <span className="text-xs text-ink-secondary font-mono">
+        <div className="flex items-center justify-between p-4 px-6 border-t-2 border-carbon bg-concrete/60">
+          <span className="font-mono text-xs text-carbon">
             {currentFiles.length === 0
-              ? "0 records staged"
-              : `${currentFiles.length} record${currentFiles.length === 1 ? "" : "s"} ready`}
+              ? "// NO RECORDS STAGED"
+              : `// ${currentFiles.length} RECORD${currentFiles.length === 1 ? "" : "S"} QUEUED`}
           </span>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={onClose}>
-              Cancel
+          <div className="flex items-center gap-3">
+            <Button variant="secondary" size="sm" onClick={onClose}>
+              Abort
             </Button>
             <Button
-              variant="primary"
+              variant="signal"
               size="sm"
               disabled={currentFiles.length === 0}
               onClick={() => {
@@ -86,7 +86,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               }}
             >
               <IconCheck size={14} className="mr-1.5" />
-              Stage {currentFiles.length > 0 ? `(${currentFiles.length})` : ""} Records
+              Commit {currentFiles.length > 0 ? `(${currentFiles.length})` : ""} to Archive
             </Button>
           </div>
         </div>

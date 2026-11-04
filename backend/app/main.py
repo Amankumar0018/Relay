@@ -9,6 +9,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
 from app.core.database import init_db, check_db_connection
+from app.services.document_service import DocumentService
 from app.api.endpoints import router as api_router
 
 logging.basicConfig(
@@ -25,7 +26,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     try:
         init_db()
         check_db_connection()
-        logger.info("Database initialized and connection verified.")
+        DocumentService.get_upload_dir()
+        logger.info("Database initialized, storage directory verified.")
     except Exception as exc:
         logger.error("Database initialization failed: %s", exc)
     yield
@@ -60,6 +62,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
             "success": False,
             "status_code": exc.status_code,
             "error": exc.detail,
+            "detail": exc.detail,
         },
     )
 

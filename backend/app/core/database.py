@@ -49,5 +49,6 @@ def check_db_connection() -> bool:
 
 def init_db() -> None:
     """Initializes metadata/tables defined in models."""
+    import app.models  # noqa: F401 - ensure models are registered on Base.metadata
     Base.metadata.create_all(bind=engine)
 

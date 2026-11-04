@@ -6,214 +6,273 @@ import {
   IconDocument,
   IconAlert,
   IconCheck,
-  IconChevronRight,
   IconUser,
   IconInfo,
+  IconArrowRight,
 } from "@/components/ui/Icons";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
 interface AgentStage {
   id: string;
+  code: string;
   name: string;
-  order: number;
+  order: string;
   role: string;
-  currentTask: string;
-  inputSpecification: string;
-  findingsSummary: string;
+  model: string;
+  status: "ACTIVE" | "STANDBY";
+  inputSpec: string;
+  findings: string;
   outputArtifact: string;
-  handoffStatus: "Ready for Handoff" | "Awaiting Pipeline Activation" | "Standing By";
-  humanReviewRequired: string;
-  unresolvedWorkNote: string;
+  humanApprovalGate: string;
+  switchOrchestrationState: string;
 }
 
-const COLLABORATIVE_AGENTS: AgentStage[] = [
+const AGENTS: AgentStage[] = [
   {
     id: "extractor",
+    code: "AGT-01",
     name: "Knowledge Extractor",
-    order: 1,
+    order: "STAGE 01",
     role: "Multimodal Document & Entity Ingestion",
-    currentTask: "Indexed 3 core demonstration charters and governance agreements.",
-    inputSpecification: "Raw PDF, DOCX, and TXT authorized organizational records.",
-    findingsSummary: "Extracted 108 relational triples, 34 entity definitions, and 12 operational procedures.",
-    outputArtifact: "Entity Graph & Citation Index",
-    handoffStatus: "Ready for Handoff",
-    humanReviewRequired: "Human ratification of extracted organizational hierarchy and role definitions.",
-    unresolvedWorkNote: "Awaiting automated OCR pass on appendix scanned diagrams in Milestone 2.",
+    model: "Gemini 3.8 Flash (High Throughput)",
+    status: "ACTIVE",
+    inputSpec: "Raw PDF, DOCX, TXT archives deposited into local storage.",
+    findings: "Parsed 42 primary records, indexing 312 relational entity triples and 100% character-level citation coordinates.",
+    outputArtifact: "Entity Graph & Verbatim Citation Concordance",
+    humanApprovalGate: "Human review of extracted organizational hierarchy and financial authority thresholds.",
+    switchOrchestrationState: "Pipeline stage completed. Citations committed to persistent SQLite database.",
   },
   {
     id: "detective",
+    code: "AGT-02",
     name: "Gap Detective",
-    order: 2,
+    order: "STAGE 02",
     role: "Cross-Record Contradiction & Omission Analysis",
-    currentTask: "Audited institutional records against transition checklists.",
-    inputSpecification: "Indexed Entity Graph and cross-document citation anchors.",
-    findingsSummary: "Discovered 1 critical missing vendor contact and 1 cloud migration policy contradiction.",
-    outputArtifact: "Discrepancy Ledger & Contradiction Diffs",
-    handoffStatus: "Ready for Handoff",
-    humanReviewRequired: "Human decision on cloud freeze consensus and secondary signatory designation.",
-    unresolvedWorkNote: "Requires human review on 3 open investigations before closing audit.",
+    model: "Gemini 3.8 Pro (Adversarial Reasoning)",
+    status: "ACTIVE",
+    inputSpec: "Entity graph, charter clauses, regulatory filings, and vendor agreements.",
+    findings: "Flagged 3 anomalies: FDA Form 1572 PI mismatch, $140K spectrometry lab auto-renewal, and missing patent exhibit.",
+    outputArtifact: "Classified Anomaly Register & Evidence Dossier",
+    humanApprovalGate: "Mandatory Switch Gate: Human adjudication required to resolve CASE-BIO-09, CASE-BIO-14, CASE-BIO-22.",
+    switchOrchestrationState: "Awaiting human resolution on 3 open matters before closing audit pass.",
   },
   {
     id: "analyst",
+    code: "AGT-03",
     name: "Continuity Analyst",
-    order: 3,
-    role: "Obligation & Dependency Risk Quantification",
-    currentTask: "Mapped transition milestones to responsible owners and deadlines.",
-    inputSpecification: "Audited entities, validated runbooks, and ratified decisions.",
-    findingsSummary: "Cataloged 4 active handover obligations, identifying the Nov 12 FDA Calibration as critical blocker.",
-    outputArtifact: "Operational Responsibility Matrix & Critical Path Schedule",
-    handoffStatus: "Standing By",
-    humanReviewRequired: "Outgoing and incoming leadership sign-off on delegation timeline.",
-    unresolvedWorkNote: "FDA calibration signatory letter requires execution prior to Nov 10.",
+    order: "STAGE 03",
+    role: "Obligation & Dependency Risk Mapping",
+    model: "Gemini 3.8 Flash (Fast Topological Evaluation)",
+    status: "STANDBY",
+    inputSpec: "Ratified decisions, verified entities, and contractual calendar dates.",
+    findings: "Cataloged 5 operational obligations, establishing the November 1 FDA PI co-signature as critical path blocker.",
+    outputArtifact: "Directed Dependency Tree & Operational Responsibility Matrix",
+    humanApprovalGate: "Departing and incoming leadership sign-off on delegation timeline.",
+    switchOrchestrationState: "Standby for Switch resolution of CASE-BIO-09 to calculate downstream risk scores.",
   },
   {
     id: "architect",
+    code: "AGT-04",
     name: "Handover Architect",
-    order: 4,
+    order: "STAGE 04",
     role: "Executive Briefing Book & Dossier Synthesis",
-    currentTask: "Compiled draft executive handover dossier with first-week action blueprint.",
-    inputSpecification: "Adjudicated claims, resolved gaps, and active responsibility matrix.",
-    findingsSummary: "Synthesized executive briefing dossier #DOS-2026-CSO-01 with 5 structured chapters.",
-    outputArtifact: "Executive Handover Dossier & First-Week Action Blueprint",
-    handoffStatus: "Standing By",
-    humanReviewRequired: "Final formal acceptance by Incoming Interim Head and General Counsel.",
-    unresolvedWorkNote: "Dossier remains in draft status pending resolution of 3 open investigations.",
+    model: "Gemini 3.8 Pro (Structured Synthesis)",
+    status: "STANDBY",
+    inputSpec: "Adjudicated claims, resolved gaps, and operational responsibility vectors.",
+    findings: "Synthesized draft executive handover dossier DOS-2024-CSO with 5 chapters and Day-1 to Day-30 blueprint.",
+    outputArtifact: "Executive Transition Dossier & First-Week Operational Blueprint",
+    humanApprovalGate: "Final formal acceptance and digital sign-off by Incoming CSO and General Counsel.",
+    switchOrchestrationState: "Dossier preview compiled. Final release locked pending Switch gate approvals.",
   },
 ];
 
 export default function AgentCollaborationPage() {
-  const [selectedAgent, setSelectedAgent] = useState<AgentStage>(COLLABORATIVE_AGENTS[0]);
+  const [selectedAgentId, setSelectedAgentId] = useState<string>("extractor");
+  const selectedAgent = AGENTS.find((a) => a.id === selectedAgentId) || AGENTS[0];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-rule">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-carbon pb-4">
         <div>
-          <h1 className="text-xl font-serif font-semibold text-ink">
-            Agent Collaboration Workflow
-          </h1>
-          <p className="text-xs text-ink-secondary mt-0.5">
-            Sequential orchestration of four specialized agents accessing Relay&apos;s persistent backend knowledge repository.
+          <span className="font-mono text-xs uppercase font-bold text-signal-orange">
+            // ORCHESTRATION PIPELINE
+          </span>
+          <h2 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight text-carbon">
+            Agent Collaboration & Switch Governance
+          </h2>
+          <p className="font-mono text-xs text-carbon/70 uppercase">
+            FOUR SPECIALIZED AGENTS • HUMAN-IN-THE-LOOP SWITCH REASONING DESK
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-sans text-ink-secondary border border-rule px-2.5 py-1 rounded bg-paper-surface">
-          <IconAgent size={14} className="text-olive" />
-          <span>Orchestration Layer: Switch Standby</span>
+        <div className="flex items-center gap-2 font-mono text-xs">
+          <span className="px-2 py-1 bg-carbon text-raw-paper font-bold uppercase">
+            ORCHESTRATOR: SWITCH BUS
+          </span>
+          <span className="px-2 py-1 bg-industrial-green text-raw-paper font-bold uppercase">
+            STORAGE: SQLITE WAL
+          </span>
         </div>
       </div>
 
-      {/* Collaboration Flow Sequence */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        {COLLABORATIVE_AGENTS.map((agent) => {
-          const isSelected = selectedAgent.id === agent.id;
+      {/* Switch Orchestration Architectural Notice */}
+      <div className="p-4 border-2 border-carbon bg-carbon text-raw-paper font-mono text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-signal-orange font-bold uppercase">
+            <span className="w-2.5 h-2.5 bg-signal-orange" />
+            <span>SWITCH COLLABORATION PROTOCOL</span>
+          </div>
+          <p className="font-sans text-xs text-raw-paper/80 leading-relaxed max-w-2xl">
+            Switch serves as the collaboration and workflow orchestration layer between human administrators and specialized agents. Persistent organizational memory resides locally in Relay&apos;s containerized SQLite database.
+          </p>
+        </div>
+
+        <div className="text-right shrink-0">
+          <span className="px-2 py-1 bg-signal-orange text-raw-paper font-bold uppercase text-[10px]">
+            HUMAN GATES ENFORCED
+          </span>
+        </div>
+      </div>
+
+      {/* 4 Agent Pipeline Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {AGENTS.map((agent) => {
+          const isSelected = agent.id === selectedAgentId;
 
           return (
-            <div
+            <button
               key={agent.id}
-              onClick={() => setSelectedAgent(agent)}
-              className={`p-4 rounded border cursor-pointer transition-colors space-y-3 flex flex-col justify-between ${
+              onClick={() => setSelectedAgentId(agent.id)}
+              className={`text-left p-5 border-2 border-carbon transition-all font-mono ${
                 isSelected
-                  ? "bg-paper-surface border-ink shadow-xs"
-                  : "bg-paper-surface border-rule hover:bg-paper-secondary/40"
+                  ? "bg-carbon text-raw-paper shadow-brutal translate-y-[-2px]"
+                  : "bg-raw-paper-light text-carbon hover:bg-concrete/40"
               }`}
             >
-              <div>
-                <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="font-mono text-ink-secondary text-[11px]">
-                    STAGE 0{agent.order}
-                  </span>
-                  <span className="w-2 h-2 rounded-full bg-olive" />
-                </div>
-                <h3 className="text-sm font-semibold text-ink font-sans">
-                  {agent.name}
-                </h3>
-                <p className="text-xs text-ink-secondary mt-1 line-clamp-2">
-                  {agent.role}
-                </p>
+              <div className="flex items-center justify-between mb-2">
+                <span
+                  className={`text-[10px] font-bold px-1.5 py-0.5 border ${
+                    isSelected
+                      ? "bg-signal-orange text-raw-paper border-carbon"
+                      : "bg-concrete text-carbon border-carbon"
+                  }`}
+                >
+                  {agent.order}
+                </span>
+                <span
+                  className={`text-[10px] font-bold ${
+                    agent.status === "ACTIVE"
+                      ? isSelected
+                        ? "text-industrial-green-light"
+                        : "text-industrial-green"
+                      : "opacity-50"
+                  }`}
+                >
+                  // {agent.status}
+                </span>
               </div>
 
-              <div className="pt-2 border-t border-rule text-[11px] text-ink-secondary flex items-center justify-between">
-                <span>{agent.handoffStatus}</span>
-                <IconChevronRight size={12} className={isSelected ? "text-ink" : "text-rule"} />
+              <h3 className="font-display font-black text-base uppercase leading-tight">
+                {agent.name}
+              </h3>
+
+              <p
+                className={`font-sans text-xs mt-1.5 leading-relaxed line-clamp-2 ${
+                  isSelected ? "text-raw-paper/70" : "text-carbon/70"
+                }`}
+              >
+                {agent.role}
+              </p>
+
+              <div className="pt-4 mt-3 border-t border-current/20 text-[10px] opacity-70">
+                {agent.model}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
 
-      {/* Selected Agent Detailed Ledger */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+      {/* Selected Agent Detailed Manifest */}
+      <div className="border-2 border-carbon bg-raw-paper p-6 sm:p-8 space-y-6 shadow-brutal">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-carbon pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <CardTitle>{selectedAgent.name} Operational Details</CardTitle>
-              <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded border bg-paper-secondary text-ink-secondary border-rule">
-                Stage 0{selectedAgent.order}
+              <span className="font-mono text-xs px-2 py-0.5 bg-carbon text-raw-paper font-bold">
+                {selectedAgent.code}
+              </span>
+              <span className="font-mono text-xs text-signal-orange font-bold uppercase">
+                {selectedAgent.order}
               </span>
             </div>
-            <p className="text-xs text-ink-secondary mt-0.5">
-              {selectedAgent.role}
+            <h3 className="font-display font-black text-2xl uppercase text-carbon mt-1">
+              {selectedAgent.name}
+            </h3>
+            <p className="font-mono text-xs text-carbon/60 uppercase">
+              ROLE: {selectedAgent.role} • ENGINE: {selectedAgent.model}
             </p>
           </div>
-          <span className="text-xs px-2 py-0.5 rounded bg-olive-light text-olive-dark border border-olive-border font-medium">
-            {selectedAgent.handoffStatus}
-          </span>
-        </CardHeader>
-        <CardContent className="space-y-4 text-xs">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-3 rounded bg-paper border border-rule space-y-1">
-              <span className="text-[10px] uppercase font-semibold text-ink-secondary block">
-                Upstream Input Specification
-              </span>
-              <p className="text-ink">{selectedAgent.inputSpecification}</p>
-            </div>
 
-            <div className="p-3 rounded bg-paper border border-rule space-y-1">
-              <span className="text-[10px] uppercase font-semibold text-olive block">
-                Downstream Output Artifact
-              </span>
-              <p className="text-ink font-medium">{selectedAgent.outputArtifact}</p>
-            </div>
-          </div>
-
-          <div className="p-3 rounded bg-paper-secondary border border-rule space-y-1">
-            <span className="text-[10px] uppercase font-semibold text-ink-secondary block">
-              Current Extraction & Finding Summary
+          <div className="font-mono text-xs">
+            <span className="px-3 py-1 bg-carbon text-raw-paper font-bold uppercase border border-carbon">
+              STATUS: {selectedAgent.status}
             </span>
-            <p className="text-ink leading-relaxed font-sans">{selectedAgent.findingsSummary}</p>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-3 rounded bg-paper-surface border border-rule space-y-1">
-              <span className="text-[10px] uppercase font-semibold text-copper block">
-                Human Review & Sign-Off Gate
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-xs">
+          {/* Input & Output */}
+          <div className="space-y-4">
+            <div className="p-4 bg-raw-paper-light border border-carbon space-y-1">
+              <span className="text-[10px] text-carbon/60 uppercase font-bold block">
+                INPUT SPECIFICATION:
               </span>
-              <p className="text-ink-secondary leading-relaxed">
-                {selectedAgent.humanReviewRequired}
+              <p className="font-sans text-xs text-carbon leading-relaxed">
+                {selectedAgent.inputSpec}
               </p>
             </div>
 
-            <div className="p-3 rounded bg-paper-surface border border-rule space-y-1">
-              <span className="text-[10px] uppercase font-semibold text-ink-secondary block">
-                Open / Unresolved Work Note
+            <div className="p-4 bg-raw-paper-light border border-carbon space-y-1">
+              <span className="text-[10px] text-carbon/60 uppercase font-bold block">
+                OUTPUT DELIVERABLE ARTIFACT:
               </span>
-              <p className="text-ink-secondary leading-relaxed">
-                {selectedAgent.unresolvedWorkNote}
-              </p>
+              <div className="p-2 bg-raw-paper border border-carbon font-bold text-carbon">
+                {selectedAgent.outputArtifact}
+              </div>
             </div>
           </div>
 
-          <div className="p-3 rounded bg-paper border border-rule flex items-start gap-2.5 text-ink-secondary">
-            <IconInfo size={16} className="text-olive shrink-0 mt-0.5" />
-            <p className="leading-relaxed">
-              <strong className="text-ink">Architecture note:</strong> Agents do not operate as independent chatbots. All four agents read from and persist structured records into Relay&apos;s persistent SQLite database through documented FastAPI endpoints, with Switch managing collaborative orchestration.
-            </p>
+          {/* Findings & Human Review Gate */}
+          <div className="space-y-4">
+            <div className="p-4 bg-raw-paper-light border border-carbon space-y-1">
+              <span className="text-[10px] text-carbon/60 uppercase font-bold block">
+                FINDINGS SUMMARY:
+              </span>
+              <p className="font-sans text-xs text-carbon leading-relaxed">
+                {selectedAgent.findings}
+              </p>
+            </div>
+
+            <div className="p-4 bg-signal-orange/10 border-2 border-signal-orange space-y-1">
+              <span className="text-[10px] text-signal-orange uppercase font-bold block">
+                MANDATORY HUMAN APPROVAL GATE:
+              </span>
+              <p className="font-sans text-xs text-carbon font-semibold leading-relaxed">
+                {selectedAgent.humanApprovalGate}
+              </p>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Switch Live State */}
+        <div className="p-4 bg-concrete/40 border border-carbon flex items-center justify-between font-mono text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-carbon" />
+            <span className="font-bold uppercase text-carbon">SWITCH PIPELINE STATE:</span>
+            <span className="text-carbon/80 font-sans">{selectedAgent.switchOrchestrationState}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
-
