@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --carbon: #171717;
+  --raw-paper: #EAE5D8;
+  --raw-paper-light: #F4F1E8;
+  --signal-orange: #F15A24;
+  --concrete: #D5CEBD;
+  --industrial-green: #353C35;
+  --signal-yellow: #F0C94A;
+}
+
+@layer base {
+  * {
+    border-color: #D5CEBD;
+  }
+  body {
+    background-color: #EAE5D8;
+    color: #171717;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background-color: #F15A24;
+    color: #EAE5D8;
+  }
+}
+
+/* Industrial Structural Borders & Plates */
+.industrial-border {
+  border: 1px solid #171717;
+}
+
+.industrial-border-thick {
+  border: 2px solid #171717;
+}
+
+.industrial-plate {
+  background-color: #F4F1E8;
+  border: 1px solid #171717;
+}
+
+.industrial-grid-pattern {
+  background-size: 24px 24px;
+  background-image: 
+    linear-gradient(to right, rgba(23, 23, 23, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(23, 23, 23, 0.05) 1px, transparent 1px);
+}
+
+/* Sharp industrial scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #D5CEBD;
+  border-left: 1px solid #171717;
+}
+::-webkit-scrollbar-thumb {
+  background: #171717;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #F15A24;
+}
