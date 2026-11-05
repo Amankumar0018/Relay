@@ -12,6 +12,7 @@ from sqlalchemy import (
     CheckConstraint,
     Index,
     func,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
@@ -426,6 +427,19 @@ class FactCitation(Base):
         nullable=True,
         comment="Character offset end within the segment or document",
     )
+    verification_status: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        default="valid",
+        server_default="valid",
+        index=True,
+        comment="valid, rejected",
+    )
+    rejection_reason: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Explicit reason if citation was rejected during grounding",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -437,6 +451,10 @@ class FactCitation(Base):
             "(char_start IS NULL AND char_end IS NULL) OR "
             "(char_start IS NOT NULL AND char_end IS NOT NULL AND char_start >= 0 AND char_end > char_start)",
             name="ck_fact_citations_offsets",
+        ),
+        CheckConstraint(
+            "verification_status IN ('valid', 'rejected')",
+            name="ck_fact_citations_verification_status",
         ),
     )
 
@@ -723,6 +741,13 @@ class ExtractionRun(Base):
         ),
         Index("ix_extraction_runs_doc_status", "document_id", "status"),
         Index("ix_extraction_runs_doc_created", "document_id", "created_at"),
+        Index(
+            "uq_extraction_runs_running_doc",
+            "document_id",
+            unique=True,
+            sqlite_where=text("status = 'running'"),
+            postgresql_where=text("status = 'running'"),
+        ),
     )
 
     # Relationships

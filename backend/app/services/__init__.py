@@ -7,6 +7,14 @@ from app.services.segmentation import (
     RawSegment,
 )
 from app.services.grounding import EvidenceGroundingService
+from app.services.intelligence_service import (
+    KnowledgePersistenceService,
+    PersistenceError,
+    DocumentNotFoundError,
+    ConcurrentExtractionError,
+    normalize_entity_name,
+    sanitize_error_message,
+)
 
 __all__ = [
     "TextExtractor",
@@ -17,4 +25,10 @@ __all__ = [
     "DocumentParseResult",
     "RawSegment",
     "EvidenceGroundingService",
+    "KnowledgePersistenceService",
+    "PersistenceError",
+    "DocumentNotFoundError",
+    "ConcurrentExtractionError",
+    "normalize_entity_name",
+    "sanitize_error_message",
 ]

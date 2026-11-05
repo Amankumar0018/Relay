@@ -155,6 +155,8 @@ class FactCitationBase(BaseModel):
     source_location: Optional[str] = Field(None, max_length=255, description="Human-readable citation label (e.g. Page 2, Section 1)")
     char_start: Optional[int] = Field(None, ge=0, description="Start character offset")
     char_end: Optional[int] = Field(None, ge=0, description="End character offset")
+    verification_status: str = Field("valid", description="Citation status: valid, rejected")
+    rejection_reason: Optional[str] = Field(None, description="Explicit failure reason if rejected")
 
     @model_validator(mode="after")
     def validate_offsets(self) -> "FactCitationBase":

@@ -53,6 +53,7 @@ from app.schemas.grounding import (
     FactGroundingResult,
     GroundedExtractionPayload,
 )
+from app.schemas.intelligence import PersistenceResult
 
 __all__ = [
     "RootResponse",
@@ -103,4 +104,5 @@ __all__ = [
     "GroundingResult",
     "FactGroundingResult",
     "GroundedExtractionPayload",
+    "PersistenceResult",
 ]
