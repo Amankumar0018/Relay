@@ -6,7 +6,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 if TYPE_CHECKING:
-    from app.models.knowledge import DocumentSegment, EntityMention, ExtractedFact
+    from app.models.knowledge import (
+        DocumentSegment,
+        EntityMention,
+        ExtractedFact,
+        ExtractionRun,
+    )
 
 
 class Document(Base):
@@ -71,6 +76,12 @@ class Document(Base):
         "ExtractedFact",
         back_populates="document",
         cascade="all, delete-orphan",
+    )
+    extraction_runs: Mapped[List["ExtractionRun"]] = relationship(
+        "ExtractionRun",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        order_by="ExtractionRun.created_at.desc()",
     )
 
     def __repr__(self) -> str:

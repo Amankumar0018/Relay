@@ -586,3 +586,153 @@ class FactVerificationLog(Base):
             f"<FactVerificationLog id={self.id} fact={self.fact_id} "
             f"action={self.action} {self.previous_status}->{self.new_status}>"
         )
+
+
+class ExtractionRun(Base):
+    """
+    Telemetry and audit log tracking document knowledge extraction executions,
+    including LLM provider metrics, token counts, extraction yield, citation
+    grounding verification counts, and failure diagnostics.
+    """
+    __tablename__ = "extraction_runs"
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+    )
+    document_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    provider_name: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="gemini",
+    )
+    model_name: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+    prompt_version: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+    )
+    prompt_hash: Mapped[str] = mapped_column(
+        String(64),
+        nullable=False,
+        comment="Cryptographic SHA-256 hash of system prompt + user prompt template",
+    )
+    status: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        default="running",
+        index=True,
+        comment="running, completed, failed",
+    )
+    retry_count: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    completed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    execution_duration_ms: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+    prompt_tokens: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+    completion_tokens: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+    facts_extracted: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+    entities_extracted: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+    relationships_extracted: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+    citations_verified: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+    citations_rejected: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+    error_stage: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True,
+        comment="prompt_prep, llm_generation, json_parse, grounding_validation, persistence",
+    )
+    error_message: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('running', 'completed', 'failed')",
+            name="ck_extraction_runs_status",
+        ),
+        CheckConstraint(
+            "retry_count >= 0",
+            name="ck_extraction_runs_retry_count",
+        ),
+        CheckConstraint(
+            "(execution_duration_ms IS NULL OR execution_duration_ms >= 0) AND "
+            "(prompt_tokens IS NULL OR prompt_tokens >= 0) AND "
+            "(completion_tokens IS NULL OR completion_tokens >= 0)",
+            name="ck_extraction_runs_execution_metrics",
+        ),
+        CheckConstraint(
+            "facts_extracted >= 0 AND "
+            "entities_extracted >= 0 AND "
+            "relationships_extracted >= 0 AND "
+            "citations_verified >= 0 AND "
+            "citations_rejected >= 0",
+            name="ck_extraction_runs_counts",
+        ),
+        Index("ix_extraction_runs_doc_status", "document_id", "status"),
+        Index("ix_extraction_runs_doc_created", "document_id", "created_at"),
+    )
+
+    # Relationships
+    document: Mapped["Document"] = relationship(
+        "Document",
+        back_populates="extraction_runs",
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<ExtractionRun id={self.id} doc={self.document_id} "
+            f"model={self.model_name} status={self.status}>"
+        )

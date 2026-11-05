@@ -275,3 +275,46 @@ class ExtractedEntityDetailResponse(ExtractedEntityResponse):
     mentions: List[EntityMentionResponse] = Field(default_factory=list, description="All surface mentions across documents")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# -------------------------------------------------------------------------
+# ExtractionRun Schemas
+# -------------------------------------------------------------------------
+
+class ExtractionRunStatus(str, Enum):
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class ExtractionRunBase(BaseModel):
+    provider_name: str = Field(default="gemini", max_length=50, description="LLM provider name")
+    model_name: str = Field(..., max_length=100, description="Model identifier used for extraction")
+    prompt_version: str = Field(..., max_length=50, description="Version tag of the prompt used")
+    prompt_hash: str = Field(..., max_length=64, description="SHA-256 hash of extraction prompt")
+    status: str = Field(default="running", max_length=30, description="Execution status: running, completed, failed")
+    retry_count: int = Field(default=0, ge=0, description="Retry count")
+    started_at: datetime = Field(..., description="Run start timestamp")
+    completed_at: Optional[datetime] = Field(None, description="Run completion timestamp")
+    execution_duration_ms: Optional[int] = Field(None, ge=0, description="Execution duration in milliseconds")
+    prompt_tokens: Optional[int] = Field(None, ge=0, description="Input prompt tokens consumed")
+    completion_tokens: Optional[int] = Field(None, ge=0, description="Output completion tokens consumed")
+    facts_extracted: int = Field(default=0, ge=0, description="Total facts extracted")
+    entities_extracted: int = Field(default=0, ge=0, description="Total canonical entities extracted/resolved")
+    relationships_extracted: int = Field(default=0, ge=0, description="Total entity relationships mapped")
+    citations_verified: int = Field(default=0, ge=0, description="Count of citations successfully grounded")
+    citations_rejected: int = Field(default=0, ge=0, description="Count of ungrounded or invalid citations rejected")
+    error_stage: Optional[str] = Field(None, max_length=50, description="Pipeline stage where failure occurred")
+    error_message: Optional[str] = Field(None, description="Detailed diagnostic error message")
+
+
+class ExtractionRunCreate(ExtractionRunBase):
+    document_id: str = Field(..., description="Source document UUID")
+
+
+class ExtractionRunResponse(ExtractionRunBase):
+    id: str = Field(..., description="Unique extraction run UUID")
+    document_id: str = Field(..., description="Source document UUID")
+    created_at: datetime = Field(..., description="Creation timestamp")
+
+    model_config = ConfigDict(from_attributes=True)

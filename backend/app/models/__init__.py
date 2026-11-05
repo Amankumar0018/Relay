@@ -8,6 +8,7 @@ from app.models.knowledge import (
     FactCitation,
     EntityRelationship,
     FactVerificationLog,
+    ExtractionRun,
 )
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "FactCitation",
     "EntityRelationship",
     "FactVerificationLog",
+    "ExtractionRun",
 ]
