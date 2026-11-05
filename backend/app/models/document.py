@@ -1,9 +1,12 @@
 import uuid
 from datetime import datetime, timezone
-from typing import Optional
+from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import String, Integer, Text, DateTime, func, Index
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
+
+if TYPE_CHECKING:
+    from app.models.knowledge import DocumentSegment, EntityMention, ExtractedFact
 
 
 class Document(Base):
@@ -52,6 +55,23 @@ class Document(Base):
         nullable=False,
     )
 
+    # Relationships
+    segments: Mapped[List["DocumentSegment"]] = relationship(
+        "DocumentSegment",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        order_by="DocumentSegment.sequence_number",
+    )
+    entity_mentions: Mapped[List["EntityMention"]] = relationship(
+        "EntityMention",
+        back_populates="document",
+        cascade="all, delete-orphan",
+    )
+    facts: Mapped[List["ExtractedFact"]] = relationship(
+        "ExtractedFact",
+        back_populates="document",
+        cascade="all, delete-orphan",
+    )
+
     def __repr__(self) -> str:
         return f"<Document id={self.id} filename={self.original_filename} status={self.extraction_status}>"
-
