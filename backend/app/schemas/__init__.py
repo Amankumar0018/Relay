@@ -47,6 +47,12 @@ from app.schemas.extraction import (
     RawRelationshipExtraction,
     DocumentExtractionPayload,
 )
+from app.schemas.grounding import (
+    GroundingStatus,
+    GroundingResult,
+    FactGroundingResult,
+    GroundedExtractionPayload,
+)
 
 __all__ = [
     "RootResponse",
@@ -93,4 +99,8 @@ __all__ = [
     "RawEntityExtraction",
     "RawRelationshipExtraction",
     "DocumentExtractionPayload",
+    "GroundingStatus",
+    "GroundingResult",
+    "FactGroundingResult",
+    "GroundedExtractionPayload",
 ]

@@ -6,6 +6,7 @@ from app.services.segmentation import (
     DocumentParseResult,
     RawSegment,
 )
+from app.services.grounding import EvidenceGroundingService
 
 __all__ = [
     "TextExtractor",
@@ -15,4 +16,5 @@ __all__ = [
     "DocumentSegmentData",
     "DocumentParseResult",
     "RawSegment",
+    "EvidenceGroundingService",
 ]
