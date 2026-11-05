@@ -38,6 +38,10 @@ from app.schemas.knowledge import (
     EntityRelationshipBase,
     EntityRelationshipCreate,
     EntityRelationshipResponse,
+    ExtractionRunStatus,
+    ExtractionRunBase,
+    ExtractionRunCreate,
+    ExtractionRunResponse,
 )
 from app.schemas.extraction import (
     RawCitationReference,
@@ -53,7 +57,14 @@ from app.schemas.grounding import (
     FactGroundingResult,
     GroundedExtractionPayload,
 )
-from app.schemas.intelligence import PersistenceResult
+from app.schemas.intelligence import (
+    PersistenceResult,
+    DocumentExtractionResponse,
+    DocumentKnowledgeResponse,
+    FactListResponse,
+    EntityListResponse,
+    ExtractionRunListResponse,
+)
 
 __all__ = [
     "RootResponse",
@@ -94,6 +105,10 @@ __all__ = [
     "EntityRelationshipBase",
     "EntityRelationshipCreate",
     "EntityRelationshipResponse",
+    "ExtractionRunStatus",
+    "ExtractionRunBase",
+    "ExtractionRunCreate",
+    "ExtractionRunResponse",
     "RawCitationReference",
     "RawFactExtraction",
     "RawEntityMention",
@@ -105,4 +120,9 @@ __all__ = [
     "FactGroundingResult",
     "GroundedExtractionPayload",
     "PersistenceResult",
+    "DocumentExtractionResponse",
+    "DocumentKnowledgeResponse",
+    "FactListResponse",
+    "EntityListResponse",
+    "ExtractionRunListResponse",
 ]

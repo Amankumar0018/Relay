@@ -625,6 +625,7 @@ class KnowledgePersistenceService:
         completion_tokens: Optional[int] = None,
         retry_count: int = 0,
         lease_seconds: int = 300,
+        existing_run: Optional[ExtractionRun] = None,
     ) -> PersistenceResult:
         """
         Main entry point for atomic knowledge extraction persistence.
@@ -636,17 +637,20 @@ class KnowledgePersistenceService:
         if not doc:
             raise DocumentNotFoundError(f"Document '{document_id}' not found")
 
-        # 2. Acquire concurrency lease lock & initialize ExtractionRun
-        run = self.acquire_extraction_lock(
-            db=db,
-            document_id=document_id,
-            provider_name=provider_name,
-            model_name=model_name,
-            prompt_version=prompt_version,
-            prompt_hash=prompt_hash,
-            retry_count=retry_count,
-            lease_seconds=lease_seconds,
-        )
+        # 2. Acquire concurrency lease lock & initialize ExtractionRun (or reuse existing locked run)
+        if existing_run is not None:
+            run = existing_run
+        else:
+            run = self.acquire_extraction_lock(
+                db=db,
+                document_id=document_id,
+                provider_name=provider_name,
+                model_name=model_name,
+                prompt_version=prompt_version,
+                prompt_hash=prompt_hash,
+                retry_count=retry_count,
+                lease_seconds=lease_seconds,
+            )
 
         # 3. Preload document segments
         segments = (

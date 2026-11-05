@@ -15,6 +15,15 @@ from app.services.intelligence_service import (
     normalize_entity_name,
     sanitize_error_message,
 )
+from app.services.extraction_service import (
+    ExtractionOrchestrator,
+    DocumentNotEligibleError,
+    ExtractionProviderError,
+    ExtractionQuotaError,
+    ExtractionAuthError,
+    ExtractionSchemaError,
+    ExtractionPersistenceError,
+)
 
 __all__ = [
     "TextExtractor",
@@ -31,4 +40,11 @@ __all__ = [
     "ConcurrentExtractionError",
     "normalize_entity_name",
     "sanitize_error_message",
+    "ExtractionOrchestrator",
+    "DocumentNotEligibleError",
+    "ExtractionProviderError",
+    "ExtractionQuotaError",
+    "ExtractionAuthError",
+    "ExtractionSchemaError",
+    "ExtractionPersistenceError",
 ]
