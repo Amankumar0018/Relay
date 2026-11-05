@@ -59,6 +59,7 @@ class RelationType(str, Enum):
     OWNS = "OWNS"
     BLOCKS = "BLOCKS"
     CONTRADICTS = "CONTRADICTS"
+    SUPERSEDES = "SUPERSEDES"
 
 
 class VerificationAction(str, Enum):

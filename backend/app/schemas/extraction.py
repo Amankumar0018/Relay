@@ -128,7 +128,7 @@ class RawRelationshipExtraction(StrictExtractionBaseModel):
     target_entity_name: str = Field(..., max_length=255, description="Target entity name")
     relation_type: RelationType = Field(
         ...,
-        description="Directed relation type: TRANSFERS_TO, REPORTS_TO, OWNS, BLOCKS, CONTRADICTS",
+        description="Directed relation type: TRANSFERS_TO, REPORTS_TO, OWNS, BLOCKS, CONTRADICTS, SUPERSEDES",
     )
     confidence: float = Field(1.0, ge=0.0, le=1.0, description="Relationship confidence score (0.0 to 1.0)")
     justification: Optional[str] = Field(None, max_length=1000, description="Reasoning or evidence explanation")

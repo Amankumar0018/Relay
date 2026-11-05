@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   IconDocument,
   IconSearch,
@@ -13,163 +13,138 @@ import {
 } from "@/components/ui/Icons";
 import { Button } from "@/components/ui/Button";
 import { EvidenceBadge } from "@/components/evidence/EvidenceBadge";
-import { FileUploader } from "@/components/upload/FileUploader";
-
-interface ArchiveRecord {
-  id: string;
-  code: string;
-  title: string;
-  category: "Charters & Governance" | "Regulatory & Compliance" | "Vendor Agreements";
-  format: "PDF" | "DOCX" | "TXT";
-  size: string;
-  pages: number;
-  extractedEntities: number;
-  status: "Indexed & Verified" | "Discrepancy Flagged" | "Staged in Memory";
-  date: string;
-  sourceAuthority: string;
-  summary: string;
-  sha256: string;
-  originalExcerpt: string;
-  extractedFacts: string[];
-  relatedRecords: string[];
-}
-
-const ARCHIVE_RECORDS: ArchiveRecord[] = [
-  {
-    id: "rec-cso-charter",
-    code: "DOC-CSO-2024",
-    title: "CSO Transition Protocol & Governance Charter v2.4.pdf",
-    category: "Charters & Governance",
-    format: "PDF",
-    size: "2.4 MB",
-    pages: 42,
-    extractedEntities: 34,
-    status: "Indexed & Verified",
-    date: "Oct 28, 2024",
-    sourceAuthority: "Legal & People Operations",
-    sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    summary:
-      "Defines the formal transfer of scientific governance, lab directorship, and committee chairs from Dr. Eleanor Vance to incoming leadership.",
-    originalExcerpt:
-      "Section 3.1: Effective November 30, 2024, the Interim Head of Discovery Research assumes full administrative oversight of discovery laboratories, IND protocols, and lab notebook archives. Dr. Eleanor Vance retains emeritus advisory rights on the Scientific Advisory Board through 2025.",
-    extractedFacts: [
-      "Interim Head assumes lab directorship on Nov 30, 2024.",
-      "Outgoing CSO maintains advisory role on Scientific Advisory Board through 2025.",
-      "Signatory delegation for FDA Bioreactor line must be executed prior to transfer.",
-    ],
-    relatedRecords: [
-      "FDA Form 1572 Principal Investigator Registry",
-      "Spectrometry Lab Services Master Agreement",
-    ],
-  },
-  {
-    id: "rec-fda-1572",
-    code: "DOC-FDA-1572",
-    title: "FDA Form 1572 Principal Investigator Registry.pdf",
-    category: "Regulatory & Compliance",
-    format: "PDF",
-    size: "4.1 MB",
-    pages: 28,
-    extractedEntities: 24,
-    status: "Discrepancy Flagged",
-    date: "Sep 18, 2024",
-    sourceAuthority: "Regulatory Compliance Group",
-    sha256: "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4",
-    summary:
-      "Primary regulatory submission for Phase II Oncology clinical trials (Protocols ONCO-101 to ONCO-108).",
-    originalExcerpt:
-      "Box 1: Sponsor Representative designated as Dr. Eleanor Vance. Box 6: Clinical protocol trial execution managed by Dr. Marcus Thorne (Site Lead). Any change in primary sponsor representative requires formal re-submission within 30 days of personnel modification.",
-    extractedFacts: [
-      "FDA Form 1572 currently lists Dr. Eleanor Vance as primary sponsor representative.",
-      "Direct conflict with Vendor Lab Execution MSA Amend. 3 (which names Dr. Thorne).",
-      "Re-submission deadline is November 1, 2024 to avoid clinical trial hold.",
-    ],
-    relatedRecords: [
-      "CSO Transition Protocol & Governance Charter v2.4",
-      "Spectrometry Lab Services Master Agreement",
-    ],
-  },
-  {
-    id: "rec-spectrometry-msa",
-    code: "DOC-MSA-82",
-    title: "Spectrometry Lab Services Master Agreement.docx",
-    category: "Vendor Agreements",
-    format: "DOCX",
-    size: "1.8 MB",
-    pages: 18,
-    extractedEntities: 18,
-    status: "Discrepancy Flagged",
-    date: "Aug 12, 2023",
-    sourceAuthority: "Procurement & Facilities",
-    sha256: "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
-    summary:
-      "Master service agreement for external spectrometry validation with Apex BioAnalytical Labs Inc.",
-    originalExcerpt:
-      "Section 8.2: Automatic 12-month extension activates on November 15, 2024 unless formal written notice of termination is delivered 30 days prior. Annual commitment fee: $140,000. Authorized signatory: Dr. Eleanor Vance.",
-    extractedFacts: [
-      "Vendor: Apex BioAnalytical Labs Inc.",
-      "Contract auto-renews on November 15, 2024 for $140,000.",
-      "Written notice window closes October 15, 2024.",
-      "Only Dr. Vance is currently named as authorized signatory.",
-    ],
-    relatedRecords: [
-      "CSO Transition Protocol & Governance Charter v2.4",
-      "FDA Form 1572 Principal Investigator Registry",
-    ],
-  },
-  {
-    id: "rec-patent-c409",
-    code: "DOC-PAT-409",
-    title: "Compound C-409 Patent Filing Memorandum RevB.pdf",
-    category: "Regulatory & Compliance",
-    format: "PDF",
-    size: "6.2 MB",
-    pages: 36,
-    extractedEntities: 42,
-    status: "Discrepancy Flagged",
-    date: "Jul 22, 2024",
-    sourceAuthority: "IP & Legal Operations",
-    sha256: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
-    summary:
-      "Chain-of-title documentation for novel kinase inhibitor compound C-409.",
-    originalExcerpt:
-      "Exhibit C (Co-inventor assignment declaration) specifies assignment of priority PCT rights to Acme BioSystems Inc. Signed counterpart from Dr. Vance and Dr. Thorne required prior to national phase entry.",
-    extractedFacts: [
-      "Exhibit C referenced in text is absent from archival repository.",
-      "Critical chain-of-title gap for European patent filing.",
-      "National phase entry deadline: December 15, 2024.",
-    ],
-    relatedRecords: [
-      "CSO Transition Protocol & Governance Charter v2.4",
-    ],
-  },
-];
+import { FileUploader, StagedFile } from "@/components/upload/FileUploader";
+import {
+  fetchDocuments,
+  fetchDocumentById,
+  fetchDocumentKnowledge,
+  fetchDocumentText,
+  uploadDocumentFile,
+  extractDocument,
+  IngestedDocument,
+  DocumentKnowledge,
+  DocumentTextData,
+} from "@/lib/api";
+import { formatBytes } from "@/lib/utils";
 
 export default function KnowledgeArchivePage() {
-  const [selectedRecordId, setSelectedRecordId] = useState<string>("rec-cso-charter");
+  const [documents, setDocuments] = useState<IngestedDocument[]>([]);
+  const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+  const [selectedKnowledge, setSelectedKnowledge] = useState<DocumentKnowledge | null>(null);
+  const [selectedText, setSelectedText] = useState<DocumentTextData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isExtracting, setIsExtracting] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
 
-  const categories = [
-    "ALL",
-    "Charters & Governance",
-    "Regulatory & Compliance",
-    "Vendor Agreements",
-  ];
+  const loadDocuments = useCallback(async () => {
+    try {
+      const res = await fetchDocuments(0, 100);
+      setDocuments(res.items);
+      if (res.items.length > 0 && !selectedDocId) {
+        setSelectedDocId(res.items[0].id);
+      }
+    } catch (err) {
+      console.warn("Failed to load backend documents:", err);
+    }
+  }, [selectedDocId]);
 
-  const filteredRecords = ARCHIVE_RECORDS.filter((rec) => {
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
+
+  // Load details whenever selectedDocId changes
+  useEffect(() => {
+    if (!selectedDocId) return;
+
+    let isMounted = true;
+    (async () => {
+      try {
+        const [knowData, textData] = await Promise.all([
+          fetchDocumentKnowledge(selectedDocId).catch(() => null),
+          fetchDocumentText(selectedDocId).catch(() => null),
+        ]);
+        if (isMounted) {
+          setSelectedKnowledge(knowData);
+          setSelectedText(textData);
+        }
+      } catch (err) {
+        console.warn("Error fetching document details:", err);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedDocId]);
+
+  const handleDepositFiles = async () => {
+    if (stagedFiles.length === 0) return;
+    setIsUploading(true);
+    setActionNotice("Uploading records to persistent vault...");
+
+    try {
+      for (const item of stagedFiles) {
+        setActionNotice(`Storing ${item.name}...`);
+        const res = await uploadDocumentFile(item.file);
+
+        setActionNotice(`Extracting structured knowledge from ${item.name}...`);
+        await extractDocument(res.document.id);
+      }
+
+      setActionNotice("All files deposited and knowledge extracted successfully.");
+      setStagedFiles([]);
+      setUploadModalOpen(false);
+      await loadDocuments();
+      setTimeout(() => setActionNotice(null), 4000);
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      setActionNotice(`Deposit error: ${err.message || "Failed to process files."}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleExtractDocument = async (docId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setIsExtracting(docId);
+    setActionNotice(`Executing deterministic grounding extraction on document ${docId.slice(0, 8)}...`);
+
+    try {
+      await extractDocument(docId);
+      setActionNotice("Extraction and evidence verification completed.");
+      await loadDocuments();
+      if (selectedDocId === docId) {
+        const [knowData, textData] = await Promise.all([
+          fetchDocumentKnowledge(docId).catch(() => null),
+          fetchDocumentText(docId).catch(() => null),
+        ]);
+        setSelectedKnowledge(knowData);
+        setSelectedText(textData);
+      }
+      setTimeout(() => setActionNotice(null), 4000);
+    } catch (err: any) {
+      console.error("Extraction error:", err);
+      setActionNotice(`Extraction failed: ${err.message || "Error running extraction pipeline"}`);
+    } finally {
+      setIsExtracting(null);
+    }
+  };
+
+  const filteredDocs = documents.filter((doc) => {
     const matchesSearch =
-      rec.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rec.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rec.summary.toLowerCase().includes(searchQuery.toLowerCase());
+      doc.original_filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.sha256_hash.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory =
-      selectedCategory === "ALL" || rec.category === selectedCategory;
+      selectedCategory === "ALL" ||
+      doc.file_extension.toUpperCase() === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const selectedRecord =
-    ARCHIVE_RECORDS.find((r) => r.id === selectedRecordId) || ARCHIVE_RECORDS[0];
+  const selectedDoc = documents.find((d) => d.id === selectedDocId) || documents[0];
 
   return (
     <div className="space-y-6 font-sans">
@@ -183,7 +158,7 @@ export default function KnowledgeArchivePage() {
             Institutional Knowledge Archive
           </h2>
           <p className="font-mono text-xs text-carbon/70 uppercase">
-            {ARCHIVE_RECORDS.length} VERIFIED ARCHIVAL RECORDS • LOCAL PERSISTENT STORAGE
+            {documents.length} VERIFIED ARCHIVAL RECORDS • LOCAL PERSISTENT STORAGE
           </p>
         </div>
 
@@ -192,6 +167,15 @@ export default function KnowledgeArchivePage() {
           <span>+ Deposit New Record</span>
         </Button>
       </div>
+
+      {actionNotice && (
+        <div className="p-3 bg-carbon text-raw-paper font-mono text-xs border border-carbon flex items-center justify-between">
+          <span>{actionNotice}</span>
+          <button onClick={() => setActionNotice(null)} className="underline uppercase text-[10px]">
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 border-2 border-carbon bg-raw-paper-light p-3">
@@ -202,222 +186,303 @@ export default function KnowledgeArchivePage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search documents by code, title, or keywords..."
+            placeholder="Search documents by filename or hash..."
             className="w-full bg-transparent border-none text-xs font-mono text-carbon placeholder:text-carbon/40 focus:outline-none"
           />
         </div>
 
-        {/* Categories */}
+        {/* Extensions */}
         <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
-          {categories.map((cat) => (
+          {["ALL", "PDF", "DOCX", "TXT"].map((ext) => (
             <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              key={ext}
+              onClick={() => setSelectedCategory(ext)}
               className={`px-2.5 py-1 uppercase text-[11px] font-bold border transition-colors ${
-                selectedCategory === cat
+                selectedCategory === ext
                   ? "bg-carbon text-raw-paper border-carbon shadow-brutal"
                   : "bg-raw-paper text-carbon border-carbon/40 hover:border-carbon"
               }`}
             >
-              {cat === "ALL" ? "[ALL]" : cat}
+              {ext}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Split-Screen Document Inspector */}
+      {/* Main Workspace Split: Table + Record Detail Drawer */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left: Document Listing (5 cols) */}
-        <div className="lg:col-span-5 border-2 border-carbon bg-raw-paper-light divide-y-2 divide-carbon shadow-brutal">
-          <div className="p-3 bg-raw-paper border-b-2 border-carbon flex items-center justify-between font-mono text-xs font-bold text-carbon">
-            <span>INDEXED RECORDS ({filteredRecords.length})</span>
-            <span className="text-[10px] text-signal-orange">SELECT TO INSPECT</span>
+        {/* Table Column (7 cols) */}
+        <div className="lg:col-span-7 border-2 border-carbon bg-raw-paper shadow-brutal overflow-hidden">
+          <div className="p-3.5 bg-raw-paper-light border-b-2 border-carbon flex items-center justify-between text-xs font-mono">
+            <span className="font-bold uppercase text-carbon">
+              PRIMARY RECORDS REPOSITORY ({filteredDocs.length})
+            </span>
+            <span className="text-carbon/60 uppercase text-[10px]">
+              CLICK TO INSPECT EXTRACTED TRIPLE GRAPH
+            </span>
           </div>
 
-          <div className="max-h-[640px] overflow-y-auto divide-y divide-carbon/20">
-            {filteredRecords.map((doc) => {
-              const isSelected = doc.id === selectedRecordId;
+          {filteredDocs.length === 0 ? (
+            <div className="p-10 text-center space-y-4">
+              <div className="w-12 h-12 bg-raw-paper-light border-2 border-carbon mx-auto flex items-center justify-center text-carbon/60">
+                <IconDocument size={24} />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-display font-bold text-sm uppercase text-carbon">
+                  No Archival Records Found
+                </h4>
+                <p className="font-mono text-xs text-carbon/70 max-w-md mx-auto">
+                  Deposit PDF charters, regulatory filings, or vendor agreements to begin deterministic extraction.
+                </p>
+              </div>
+              <Button
+                variant="signal"
+                size="sm"
+                onClick={() => setUploadModalOpen(true)}
+              >
+                Deposit First Record →
+              </Button>
+            </div>
+          ) : (
+            <div className="divide-y-2 divide-carbon">
+              {filteredDocs.map((rec) => {
+                const isSelected = rec.id === selectedDocId;
 
-              return (
-                <button
-                  key={doc.id}
-                  onClick={() => setSelectedRecordId(doc.id)}
-                  className={`w-full text-left p-4 transition-all text-xs font-mono ${
-                    isSelected
-                      ? "bg-carbon text-raw-paper border-l-4 border-signal-orange"
-                      : "bg-raw-paper-light text-carbon hover:bg-concrete/40"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.2 border ${
-                        isSelected
-                          ? "bg-signal-orange text-raw-paper border-carbon"
-                          : "bg-concrete text-carbon border-carbon"
-                      }`}
-                    >
-                      {doc.code}
-                    </span>
-                    <span className="text-[10px] opacity-70 uppercase font-bold">
-                      {doc.format} • {doc.size}
-                    </span>
-                  </div>
-
-                  <h3 className="font-sans font-bold text-sm leading-snug line-clamp-2">
-                    {doc.title}
-                  </h3>
-
-                  <p
-                    className={`font-sans text-xs mt-1.5 line-clamp-2 ${
-                      isSelected ? "text-raw-paper/80" : "text-carbon/70"
+                return (
+                  <div
+                    key={rec.id}
+                    onClick={() => setSelectedDocId(rec.id)}
+                    className={`p-4 cursor-pointer transition-colors space-y-2 ${
+                      isSelected
+                        ? "bg-carbon text-raw-paper"
+                        : "bg-raw-paper-light hover:bg-concrete/40 text-carbon"
                     }`}
                   >
-                    {doc.summary}
-                  </p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`font-mono text-[10px] px-1.5 py-0.2 font-bold uppercase border ${
+                              isSelected
+                                ? "bg-signal-orange text-raw-paper border-raw-paper/30"
+                                : "bg-carbon text-raw-paper border-carbon"
+                            }`}
+                          >
+                            {rec.file_extension.toUpperCase()}
+                          </span>
+                          <span className="font-mono text-[10px] opacity-60 truncate">
+                            {rec.id.slice(0, 8)}...
+                          </span>
+                        </div>
+                        <h4 className="font-display font-bold text-sm uppercase truncate">
+                          {rec.original_filename}
+                        </h4>
+                      </div>
 
-                  <div className="flex items-center justify-between pt-3 mt-2 border-t border-current/10 text-[10px]">
-                    <span className="opacity-70">{doc.date}</span>
-                    <span
-                      className={`font-bold uppercase ${
-                        doc.status.includes("Flagged")
-                          ? isSelected
-                            ? "text-signal-orange"
-                            : "text-signal-orange"
-                          : isSelected
-                          ? "text-industrial-green-light"
-                          : "text-industrial-green"
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span
+                          className={`font-mono text-[10px] px-2 py-0.5 font-bold uppercase border ${
+                            rec.extraction_status === "completed"
+                              ? isSelected
+                                ? "bg-industrial-green-light text-carbon border-transparent"
+                                : "bg-industrial-green text-raw-paper border-carbon"
+                              : rec.extraction_status === "failed"
+                              ? "bg-signal-red text-raw-paper border-carbon"
+                              : "bg-signal-yellow text-carbon border-carbon"
+                          }`}
+                        >
+                          {rec.extraction_status === "completed"
+                            ? "Indexed & Grounded"
+                            : rec.extraction_status === "failed"
+                            ? "Extraction Error"
+                            : "Pending Extraction"}
+                        </span>
+
+                        <Button
+                          variant={isSelected ? "outline" : "primary"}
+                          size="sm"
+                          onClick={(e) => handleExtractDocument(rec.id, e)}
+                          disabled={isExtracting === rec.id}
+                          className="text-[10px] py-0.5 px-2 h-auto"
+                        >
+                          {isExtracting === rec.id
+                            ? "Extracting..."
+                            : rec.extraction_status === "completed"
+                            ? "Re-Extract"
+                            : "Extract Now"}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`flex flex-wrap items-center justify-between text-[11px] font-mono pt-1 border-t ${
+                        isSelected ? "border-raw-paper/20 text-raw-paper/70" : "border-carbon/20 text-carbon/70"
                       }`}
                     >
-                      {doc.status}
-                    </span>
+                      <span>Size: {formatBytes(rec.file_size)}</span>
+                      <span>Words: {rec.word_count || 0}</span>
+                      <span>Date: {new Date(rec.created_at).toLocaleDateString()}</span>
+                    </div>
                   </div>
-                </button>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Right: Detailed Document Inspector (7 cols) */}
-        <div className="lg:col-span-7 border-2 border-carbon bg-raw-paper p-6 space-y-6 shadow-brutal">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-2 border-carbon pb-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs px-2 py-0.5 bg-carbon text-raw-paper font-bold">
-                  {selectedRecord.code}
-                </span>
-                <span className="font-mono text-xs text-signal-orange font-bold uppercase">
-                  {selectedRecord.category}
-                </span>
-              </div>
-              <h3 className="font-display font-black text-lg sm:text-xl uppercase text-carbon leading-snug">
-                {selectedRecord.title}
-              </h3>
-            </div>
-
-            <div className="flex items-center gap-2 self-start sm:self-center font-mono text-xs">
-              <span className="px-2 py-1 bg-concrete border border-carbon text-carbon font-bold">
-                {selectedRecord.pages} PAGES
-              </span>
-              <span className="px-2 py-1 bg-concrete border border-carbon text-carbon font-bold">
-                {selectedRecord.extractedEntities} TRIPLES
-              </span>
-            </div>
-          </div>
-
-          {/* Cryptographic SHA-256 Provenance Box */}
-          <div className="p-3 bg-raw-paper-light border border-carbon font-mono text-xs space-y-1">
-            <div className="flex items-center justify-between text-[10px] text-carbon/60 uppercase font-bold">
-              <span>CRYPTOGRAPHIC PROVENANCE</span>
-              <span>SHA-256 VERIFIED</span>
-            </div>
-            <p className="text-[11px] text-carbon break-all font-mono">
-              {selectedRecord.sha256}
-            </p>
-          </div>
-
-          {/* Original Verbatim Document Excerpt */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs uppercase font-bold text-carbon">
-                VERBATIM DOCUMENT EXCERPT
-              </span>
-              <span className="font-mono text-[10px] text-signal-orange font-bold">
-                PAGE 4 // PARA 2
-              </span>
-            </div>
-            <blockquote className="p-4 bg-raw-paper-light border-l-4 border-signal-orange font-mono text-xs text-carbon leading-relaxed">
-              &ldquo;{selectedRecord.originalExcerpt}&rdquo;
-            </blockquote>
-          </div>
-
-          {/* Extracted Structured Entities & Facts */}
-          <div className="space-y-2">
-            <span className="font-mono text-xs uppercase font-bold text-carbon">
-              STRUCTURED ENTITY TRIPLES
-            </span>
-            <div className="divide-y divide-carbon/20 border border-carbon bg-raw-paper-light font-mono text-xs">
-              {selectedRecord.extractedFacts.map((fact, idx) => (
-                <div key={idx} className="p-2.5 flex items-start gap-2.5">
-                  <span className="text-signal-orange font-bold">[{idx + 1}]</span>
-                  <span className="text-carbon leading-relaxed">{fact}</span>
+        {/* Detail Inspection Column (5 cols) */}
+        <div className="lg:col-span-5 border-2 border-carbon bg-raw-paper shadow-brutal space-y-5 p-5">
+          {selectedDoc ? (
+            <>
+              {/* Header */}
+              <div className="border-b-2 border-carbon pb-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs uppercase font-bold text-signal-orange">
+                    // RECORD INSPECTION DESK
+                  </span>
+                  <span className="font-mono text-[10px] text-carbon/60">
+                    SHA256: {selectedDoc.sha256_hash.slice(0, 12)}...
+                  </span>
                 </div>
-              ))}
-            </div>
-          </div>
+                <h3 className="font-display font-black text-lg uppercase text-carbon leading-snug">
+                  {selectedDoc.original_filename}
+                </h3>
+                <div className="flex items-center gap-2 font-mono text-xs text-carbon/70">
+                  <span>FORMAT: {selectedDoc.file_extension.toUpperCase()}</span>
+                  <span>•</span>
+                  <span>SIZE: {formatBytes(selectedDoc.file_size)}</span>
+                </div>
+              </div>
 
-          {/* Related Cross-References */}
-          <div className="space-y-2 pt-2 border-t border-carbon/20">
-            <span className="font-mono text-[11px] uppercase font-bold text-carbon/60">
-              CROSS-REFERENCED RECORDS
-            </span>
-            <div className="flex flex-wrap gap-2 font-mono text-xs">
-              {selectedRecord.relatedRecords.map((rel, idx) => (
-                <span
-                  key={idx}
-                  className="px-2.5 py-1 bg-concrete/60 border border-carbon text-carbon"
-                >
-                  {rel}
-                </span>
-              ))}
+              {/* Extracted Knowledge Graph Summary */}
+              {selectedKnowledge && (
+                <div className="space-y-3 font-mono text-xs">
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="p-2 border border-carbon bg-raw-paper-light">
+                      <span className="text-[10px] text-carbon/60 block">FACTS</span>
+                      <span className="font-bold text-sm text-carbon">
+                        {selectedKnowledge.total_facts}
+                      </span>
+                    </div>
+                    <div className="p-2 border border-carbon bg-raw-paper-light">
+                      <span className="text-[10px] text-carbon/60 block">ENTITIES</span>
+                      <span className="font-bold text-sm text-carbon">
+                        {selectedKnowledge.total_entities}
+                      </span>
+                    </div>
+                    <div className="p-2 border border-carbon bg-raw-paper-light">
+                      <span className="text-[10px] text-carbon/60 block">RELATIONS</span>
+                      <span className="font-bold text-sm text-carbon">
+                        {selectedKnowledge.total_relationships}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Fact List with Citations */}
+                  <div className="space-y-2 pt-2">
+                    <span className="font-mono text-xs font-bold text-carbon uppercase block">
+                      GROUNDED STATEMENTS & EVIDENCE ({selectedKnowledge.facts.length})
+                    </span>
+                    <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+                      {selectedKnowledge.facts.map((fact) => (
+                        <div
+                          key={fact.id}
+                          className="p-3 bg-raw-paper-light border border-carbon space-y-1.5"
+                        >
+                          <div className="flex items-center justify-between text-[10px]">
+                            <span className="font-bold uppercase text-signal-orange">
+                              {fact.category}
+                            </span>
+                            <EvidenceBadge
+                              status={
+                                fact.verification_status === "evidence-backed"
+                                  ? "evidence-backed"
+                                  : "inferred"
+                              }
+                              size="sm"
+                            />
+                          </div>
+                          <p className="font-sans text-xs text-carbon leading-relaxed">
+                            {fact.statement}
+                          </p>
+
+                          {fact.citations && fact.citations.length > 0 && (
+                            <div className="pt-1 border-t border-carbon/20 font-mono text-[10px] text-carbon/70">
+                              <span className="font-bold block text-carbon/60">
+                                CITATION [{fact.citations[0].source_location}]:
+                              </span>
+                              <blockquote className="italic">
+                                &ldquo;{fact.citations[0].verbatim_quote}&rdquo;
+                              </blockquote>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Text Preview */}
+              {selectedText && selectedText.extracted_text && (
+                <div className="space-y-2 pt-2 border-t-2 border-carbon font-mono text-xs">
+                  <span className="font-bold text-carbon uppercase block">
+                    RAW EXTRACTED CORPUS PREVIEW ({selectedText.character_count} CHARACTERS)
+                  </span>
+                  <div className="p-3 bg-raw-paper-light border border-carbon max-h-40 overflow-y-auto text-[11px] text-carbon/80 leading-relaxed font-mono whitespace-pre-wrap">
+                    {selectedText.extracted_text.slice(0, 800)}
+                    {selectedText.extracted_text.length > 800 ? "..." : ""}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="p-8 text-center text-xs font-mono text-carbon/60">
+              Select a deposited record from the table to inspect details.
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Upload Modal Integration */}
+      {/* Upload Modal */}
       {uploadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-carbon/75 backdrop-blur-xs"
-            onClick={() => setUploadModalOpen(false)}
-            aria-hidden="true"
-          />
-          <div className="relative w-full max-w-xl bg-raw-paper-light border-2 border-carbon shadow-brutal-lg p-6 z-10 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b-2 border-carbon">
+        <div className="fixed inset-0 z-50 bg-carbon/80 flex items-center justify-center p-4">
+          <div className="bg-raw-paper border-2 border-carbon max-w-xl w-full p-6 space-y-4 shadow-brutal-lg">
+            <div className="flex items-center justify-between border-b-2 border-carbon pb-3">
               <div>
-                <h2 className="font-display font-bold text-base uppercase text-carbon">
-                  Deposit Records to Archive
-                </h2>
-                <p className="font-mono text-xs text-carbon/70">
-                  Validated files are staged into the persistent archive buffer.
-                </p>
+                <span className="font-mono text-xs uppercase font-bold text-signal-orange">
+                  // VAULT DEPOSIT DOCK
+                </span>
+                <h3 className="font-display font-black text-lg uppercase text-carbon">
+                  Deposit Archival Records
+                </h3>
               </div>
               <button
                 onClick={() => setUploadModalOpen(false)}
-                className="p-1 text-carbon hover:text-signal-orange"
+                className="p-1 hover:text-signal-orange"
               >
                 <IconClose size={18} />
               </button>
             </div>
 
-            <FileUploader />
+            <FileUploader onFilesSelected={(files) => setStagedFiles(files)} />
 
-            <div className="pt-3 border-t border-carbon flex justify-end">
-              <Button variant="outline" size="sm" onClick={() => setUploadModalOpen(false)}>
-                Done Staging
-              </Button>
-            </div>
+            {stagedFiles.length > 0 && (
+              <div className="pt-2 flex items-center justify-between gap-3">
+                <span className="font-mono text-xs text-carbon">
+                  {stagedFiles.length} file(s) staged for vault deposit
+                </span>
+                <Button
+                  variant="signal"
+                  size="sm"
+                  onClick={handleDepositFiles}
+                  disabled={isUploading}
+                >
+                  <IconUpload size={14} className="mr-1.5" />
+                  <span>{isUploading ? "Uploading & Extracting..." : "Deposit Records Now"}</span>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}

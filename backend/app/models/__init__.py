@@ -10,6 +10,11 @@ from app.models.knowledge import (
     FactVerificationLog,
     ExtractionRun,
 )
+from app.models.continuity import (
+    KnowledgeConflict,
+    HandoverDossier,
+    QuestionAnswerAudit,
+)
 
 __all__ = [
     "Base",
@@ -22,4 +27,7 @@ __all__ = [
     "EntityRelationship",
     "FactVerificationLog",
     "ExtractionRun",
+    "KnowledgeConflict",
+    "HandoverDossier",
+    "QuestionAnswerAudit",
 ]

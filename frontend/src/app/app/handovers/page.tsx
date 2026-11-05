@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   IconDossier,
   IconCheck,
@@ -12,12 +12,79 @@ import {
 } from "@/components/ui/Icons";
 import { Button } from "@/components/ui/Button";
 import { EvidenceBadge } from "@/components/evidence/EvidenceBadge";
+import {
+  fetchHandoverDossiers,
+  generateHandoverDossier,
+  HandoverDossier,
+} from "@/lib/api";
 
 export default function HandoverDossiersPage() {
-  const [activeChapter, setActiveChapter] = useState<
-    "ch1" | "ch2" | "ch3" | "ch4" | "ch5"
-  >("ch1");
-  const [exportNotice, setExportNotice] = useState(false);
+  const [dossiers, setDossiers] = useState<HandoverDossier[]>([]);
+  const [activeDossier, setActiveDossier] = useState<HandoverDossier | null>(null);
+  const [activeChapter, setActiveChapter] = useState<string>("ch1");
+  const [isCompiling, setIsCompiling] = useState(false);
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
+
+  const loadDossiers = useCallback(async () => {
+    try {
+      const res = await fetchHandoverDossiers();
+      if (res.items.length > 0) {
+        setDossiers(res.items);
+        setActiveDossier(res.items[0]);
+      }
+    } catch (err) {
+      console.warn("Failed to load dossiers:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDossiers();
+  }, [loadDossiers]);
+
+  const handleCompileDossier = async () => {
+    setIsCompiling(true);
+    setExportNotice("Compiling executive transition briefing book from verified knowledge graph...");
+
+    try {
+      const newDossier = await generateHandoverDossier({
+        title: "Executive Briefing Book: Chief Scientific Officer Transition",
+        target_role: "Chief Scientific Officer",
+        outgoing_leader_name: "Dr. Eleanor Vance",
+        incoming_leader_name: "Dr. Marcus Thorne",
+      });
+
+      setDossiers((prev) => [newDossier, ...prev]);
+      setActiveDossier(newDossier);
+      setActiveChapter("ch1");
+      setExportNotice("Dossier compiled successfully with cryptographic citation anchors.");
+      setTimeout(() => setExportNotice(null), 4500);
+    } catch (err: any) {
+      console.error("Compilation error:", err);
+      setExportNotice(`Compilation failed: ${err.message}`);
+    } finally {
+      setIsCompiling(false);
+    }
+  };
+
+  const handleExportJSON = () => {
+    if (!activeDossier) return;
+    const blob = new Blob([JSON.stringify(activeDossier, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Relay-Dossier-v${activeDossier.version}-${activeDossier.id.slice(0, 8)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExportNotice("Structured dossier JSON exported to local disk.");
+    setTimeout(() => setExportNotice(null), 4000);
+  };
+
+  // Find currently active chapter
+  const currentChapter =
+    activeDossier?.content.chapters.find((c) => c.chapter_id === activeChapter) ||
+    activeDossier?.content.chapters[0];
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto font-sans">
@@ -31,7 +98,9 @@ export default function HandoverDossiersPage() {
             Executive Handover Dossier
           </h2>
           <p className="font-mono text-xs text-carbon/70 uppercase">
-            DELIVERABLE #DOS-2024-CSO-01 • ACME BIOSYSTEMS TRANSITION NODE
+            {activeDossier
+              ? `DELIVERABLE #DOS-2024-CSO-v${activeDossier.version} • ACME BIOSYSTEMS TRANSITION NODE`
+              : "ACME BIOSYSTEMS TRANSITION NODE • VERIFIED MULTI-CHAPTER BRIEFING BOOK"}
           </p>
         </div>
 
@@ -39,17 +108,25 @@ export default function HandoverDossiersPage() {
           <Button
             variant="outline"
             size="sm"
+            onClick={handleCompileDossier}
+            disabled={isCompiling}
+          >
+            <span>{isCompiling ? "Compiling Dossier..." : "Compile Live Dossier"}</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => window.print()}
           >
             <span>Print View</span>
           </Button>
+
           <Button
             variant="signal"
             size="sm"
-            onClick={() => {
-              setExportNotice(true);
-              setTimeout(() => setExportNotice(false), 4000);
-            }}
+            onClick={handleExportJSON}
+            disabled={!activeDossier}
           >
             <span>Export Structured Dossier</span>
           </Button>
@@ -58,8 +135,8 @@ export default function HandoverDossiersPage() {
 
       {exportNotice && (
         <div className="p-3 bg-industrial-green text-raw-paper font-mono text-xs border border-carbon flex items-center justify-between">
-          <span className="font-bold">✓ DOSSIER EXPORTED TO LOCAL DISK WITH CRYPTOGRAPHIC CITATION ANCHORS</span>
-          <button onClick={() => setExportNotice(false)} className="underline uppercase">
+          <span className="font-bold">✓ {exportNotice}</span>
+          <button onClick={() => setExportNotice(null)} className="underline uppercase text-[10px]">
             Dismiss
           </button>
         </div>
@@ -74,7 +151,11 @@ export default function HandoverDossiersPage() {
               // INSTITUTIONAL CONTINUITY DOSSIER
             </span>
             <div className="flex items-center gap-3 text-raw-paper/60 uppercase">
-              <span>STATUS: COMPILED</span>
+              <span>STATUS: {activeDossier ? activeDossier.status.toUpperCase() : "COMPILED"}</span>
+              <span>•</span>
+              <span>
+                VERSION: {activeDossier ? `v${activeDossier.version}` : "v1.0"}
+              </span>
               <span>•</span>
               <span>EFFECTIVE: NOVEMBER 30, 2024</span>
             </div>
@@ -82,10 +163,11 @@ export default function HandoverDossiersPage() {
 
           <div className="space-y-2">
             <h1 className="font-display font-black text-2xl sm:text-4xl uppercase tracking-tight text-raw-paper leading-tight">
-              Executive Briefing Book: Chief Scientific Officer Transition
+              {activeDossier?.title || "Executive Briefing Book: Chief Scientific Officer Transition"}
             </h1>
             <p className="font-sans text-xs sm:text-sm text-raw-paper/80 leading-relaxed max-w-2xl">
-              Preserved organizational decisions, operational obligations, active trial protocols, and resolved institutional matters for incoming leadership.
+              {activeDossier?.content.executive_summary ||
+                "Preserved organizational decisions, operational obligations, active trial protocols, and resolved institutional matters for incoming leadership."}
             </p>
           </div>
 
@@ -118,21 +200,21 @@ export default function HandoverDossiersPage() {
         </div>
 
         {/* Chapter Navigation Bar */}
-        <div className="border-b-2 border-carbon bg-concrete/40 p-2 flex flex-wrap gap-1 font-mono text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-5 border-b-2 border-carbon bg-raw-paper-light divide-x-2 divide-carbon font-mono text-xs">
           {[
-            { id: "ch1", label: "CH.01 BACKGROUND & CHARTER" },
-            { id: "ch2", label: "CH.02 OPERATIONAL OBLIGATIONS" },
-            { id: "ch3", label: "CH.03 ANOMALIES & GAPS" },
-            { id: "ch4", label: "CH.04 FIRST-WEEK BLUEPRINT" },
-            { id: "ch5", label: "CH.05 CITATIONS & HASHES" },
+            { id: "ch1", label: "CH 01 // MANDATE" },
+            { id: "ch2", label: "CH 02 // DECISIONS" },
+            { id: "ch3", label: "CH 03 // OBLIGATIONS" },
+            { id: "ch4", label: "CH 04 // RISKS & GAPS" },
+            { id: "ch5", label: "CH 05 // DAY 1-30" },
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveChapter(tab.id as any)}
-              className={`px-3 py-1.5 uppercase font-bold border transition-colors ${
+              onClick={() => setActiveChapter(tab.id)}
+              className={`p-3 text-left font-bold uppercase transition-colors ${
                 activeChapter === tab.id
-                  ? "bg-carbon text-raw-paper border-carbon shadow-brutal"
-                  : "bg-raw-paper text-carbon border-carbon/40 hover:border-carbon"
+                  ? "bg-carbon text-raw-paper shadow-inner"
+                  : "hover:bg-concrete/40 text-carbon"
               }`}
             >
               {tab.label}
@@ -140,246 +222,144 @@ export default function HandoverDossiersPage() {
           ))}
         </div>
 
-        {/* Chapter Content Area */}
-        <div className="p-6 sm:p-10 space-y-8 bg-raw-paper-light">
-          {/* Chapter 01: Background & Charter */}
-          {activeChapter === "ch1" && (
-            <div className="space-y-6">
-              <div className="space-y-1 border-b-2 border-carbon pb-3">
-                <span className="font-mono text-xs font-bold text-signal-orange">
-                  CHAPTER 01 // FOUNDATIONS
-                </span>
-                <h3 className="font-display font-black text-xl uppercase text-carbon">
-                  Organizational Context & Mandate Handover
-                </h3>
-              </div>
-
-              <div className="space-y-4 text-xs sm:text-sm text-carbon leading-relaxed font-sans">
-                <p>
-                  Acme BioSystems Discovery Research Division oversees Phase II Oncology clinical trial assets and preclinical kinase inhibitor discovery. Following six years of leadership under Chief Scientific Officer Dr. Eleanor Vance, operational directorship transfers to Dr. Marcus Thorne effective November 30, 2024.
-                </p>
-                <p>
-                  Pursuant to Executive Committee Charter Section 3.1, this transition dossier documents all active trial protocols, vendor renewal opt-outs, and pending regulatory declarations to guarantee uninterrupted FDA compliance.
+        {/* Chapter Content Plate */}
+        <div className="p-6 sm:p-10 space-y-8">
+          {currentChapter ? (
+            <>
+              {/* Chapter Title & Synthesis */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs uppercase px-2 py-0.5 bg-signal-orange text-raw-paper font-bold">
+                    {currentChapter.chapter_id.toUpperCase()}
+                  </span>
+                  <h2 className="font-display font-black text-xl sm:text-2xl uppercase text-carbon">
+                    {currentChapter.title}
+                  </h2>
+                </div>
+                <p className="font-sans text-sm text-carbon/90 leading-relaxed bg-raw-paper-light p-4 border border-carbon">
+                  {currentChapter.summary}
                 </p>
               </div>
 
-              <div className="p-4 border-2 border-carbon bg-raw-paper space-y-2 font-mono text-xs">
-                <span className="text-[10px] uppercase font-bold text-signal-orange">
-                  KEY DECISION REGISTER (2020 - 2024):
-                </span>
-                <ul className="space-y-1.5 text-carbon">
-                  <li className="flex items-start gap-2">
-                    <span className="font-bold">[2021]</span>
-                    <span>Selection of Compound C-409 as lead kinase inhibitor program candidate.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="font-bold">[2023]</span>
-                    <span>Execution of Master Services Agreement with Apex BioAnalytical for spectrometry testing.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="font-bold">[2024]</span>
-                    <span>Submission of FDA IND Filings #99201 and #99204 for multi-site Phase II oncology trials.</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          )}
+              {/* Verified Facts & Evidence Slices */}
+              {currentChapter.facts && currentChapter.facts.length > 0 && (
+                <div className="space-y-4">
+                  <span className="font-mono text-xs uppercase font-bold text-carbon block">
+                    // RATIFIED CLAIMS & EVIDENCE ANCHORS ({currentChapter.facts.length})
+                  </span>
 
-          {/* Chapter 02: Operational Obligations */}
-          {activeChapter === "ch2" && (
+                  <div className="space-y-3">
+                    {currentChapter.facts.map((fact) => (
+                      <div
+                        key={fact.id}
+                        className="p-4 bg-raw-paper-light border-l-4 border-carbon font-mono text-xs space-y-2"
+                      >
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="font-bold text-signal-orange uppercase">
+                            CATEGORY: {fact.category}
+                          </span>
+                          <EvidenceBadge
+                            status={
+                              fact.verification_status === "evidence-backed"
+                                ? "evidence-backed"
+                                : "inferred"
+                            }
+                            size="sm"
+                          />
+                        </div>
+
+                        <p className="font-sans text-xs sm:text-sm text-carbon font-medium">
+                          {fact.statement}
+                        </p>
+
+                        {fact.citations && fact.citations.length > 0 && (
+                          <div className="pt-2 border-t border-carbon/20 space-y-1">
+                            <span className="text-[10px] text-carbon/60 uppercase font-bold block">
+                              VERBATIM QUOTE [{fact.citations[0].source_location}]:
+                            </span>
+                            <blockquote className="italic text-carbon/80 text-[11px] leading-relaxed">
+                              &ldquo;{fact.citations[0].verbatim_quote}&rdquo;
+                            </blockquote>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recommended Action Items */}
+              {currentChapter.action_items && currentChapter.action_items.length > 0 && (
+                <div className="p-5 bg-concrete/30 border-2 border-carbon space-y-3 font-mono text-xs">
+                  <span className="font-bold text-carbon uppercase block">
+                    // CHAPTER ACTION DIRECTIVES & TRANSITION MANDATES
+                  </span>
+                  <ul className="space-y-2 list-disc list-inside font-sans text-xs text-carbon/90">
+                    {currentChapter.action_items.map((item, i) => (
+                      <li key={i} className="leading-relaxed">
+                        <strong className="font-mono text-signal-orange font-bold mr-1">
+                          [ACTION-{i + 1}]
+                        </strong>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Fallback Chapter 1 when no dossier generated yet */
             <div className="space-y-6">
-              <div className="space-y-1 border-b-2 border-carbon pb-3">
-                <span className="font-mono text-xs font-bold text-signal-orange">
-                  CHAPTER 02 // COMMITMENTS
+              <div className="space-y-2">
+                <span className="font-mono text-xs uppercase px-2 py-0.5 bg-signal-orange text-raw-paper font-bold">
+                  CHAPTER 01
                 </span>
-                <h3 className="font-display font-black text-xl uppercase text-carbon">
-                  Active Operational Obligations & Delegations
-                </h3>
+                <h2 className="font-display font-black text-2xl uppercase text-carbon">
+                  Executive Context & Institutional Mandate
+                </h2>
+                <p className="font-sans text-sm text-carbon/90 leading-relaxed bg-raw-paper-light p-4 border border-carbon">
+                  Dr. Eleanor Vance has served as Chief Scientific Officer since January 2021. The transition to Dr. Marcus Thorne transfers regulatory oversight of IND filings, discovery chemistry laboratories, and cross-functional research committees.
+                </p>
               </div>
 
-              <div className="divide-y-2 divide-carbon border-2 border-carbon bg-raw-paper font-mono text-xs">
-                <div className="p-4 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-signal-orange">[RES-01] FDA Form 1572 Co-Signature</span>
-                    <span className="text-carbon/60">DEADLINE: NOV 01</span>
-                  </div>
-                  <p className="font-sans text-xs text-carbon">
-                    Submit updated sponsor protocol representation to FDA trial registry. Lead: Dr. Thorne.
-                  </p>
-                </div>
-
-                <div className="p-4 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-signal-orange">[RES-02] Spectrometry Lab Termination Notice</span>
-                    <span className="text-carbon/60">DEADLINE: OCT 15</span>
-                  </div>
-                  <p className="font-sans text-xs text-carbon">
-                    Deliver written 30-day non-renewal notice to Apex BioAnalytical to prevent $140K auto-commitment.
-                  </p>
-                </div>
-
-                <div className="p-4 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-signal-orange">[RES-03] Biosafety Committee Chair Transfer</span>
-                    <span className="text-carbon/60">DEADLINE: NOV 15</span>
-                  </div>
-                  <p className="font-sans text-xs text-carbon">
-                    Ratify delegation of Institutional Biosafety Committee chairmanship to Dr. Thorne.
-                  </p>
-                </div>
+              <div className="p-4 bg-signal-orange/10 border-2 border-signal-orange space-y-2 font-mono text-xs">
+                <span className="font-bold text-signal-orange uppercase block">
+                  READY TO COMPILE DEDICATED BRIEFING BOOK
+                </span>
+                <p className="font-sans text-xs text-carbon">
+                  Click &ldquo;Compile Live Dossier&rdquo; above to synthesize all 5 chapters directly from your active knowledge graph with cryptographic citations.
+                </p>
               </div>
             </div>
           )}
 
-          {/* Chapter 03: Anomalies & Gaps */}
-          {activeChapter === "ch3" && (
-            <div className="space-y-6">
-              <div className="space-y-1 border-b-2 border-carbon pb-3">
-                <span className="font-mono text-xs font-bold text-signal-orange">
-                  CHAPTER 03 // ANOMALIES & AUDIT
+          {/* Day 1-30 Roadmap Preview */}
+          {activeDossier?.content.recommended_day_1_to_30_actions &&
+            activeDossier.content.recommended_day_1_to_30_actions.length > 0 && (
+              <div className="pt-6 border-t-2 border-carbon space-y-4">
+                <span className="font-mono text-xs uppercase font-bold text-carbon block">
+                  // DAY 1 TO DAY 30 EXECUTIVE OPERATIONAL ROADMAP
                 </span>
-                <h3 className="font-display font-black text-xl uppercase text-carbon">
-                  Classified Institutional Gaps & Action Log
-                </h3>
-              </div>
 
-              <div className="space-y-4 font-mono text-xs">
-                <div className="p-4 border-2 border-carbon bg-raw-paper space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-signal-orange">CASE-BIO-09: FDA Form 1572 Signatory Contradiction</span>
-                    <EvidenceBadge status="conflicting" size="sm" />
-                  </div>
-                  <p className="font-sans text-xs text-carbon">
-                    Discrepancy between Vendor Amendment 3 and Form 1572. Action: Joint re-filing scheduled for Oct 30.
-                  </p>
-                </div>
-
-                <div className="p-4 border-2 border-carbon bg-raw-paper space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-signal-orange">CASE-BIO-14: Spectrometry Renewal Window</span>
-                    <EvidenceBadge status="missing" size="sm" />
-                  </div>
-                  <p className="font-sans text-xs text-carbon">
-                    Unassigned termination authority resolved via Switch delegation memo to interim finance liaison.
-                  </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs">
+                  {activeDossier.content.recommended_day_1_to_30_actions.map(
+                    (action, idx) => (
+                      <div
+                        key={idx}
+                        className="p-3 bg-raw-paper-light border border-carbon space-y-1"
+                      >
+                        <span className="text-[10px] text-signal-orange uppercase font-bold">
+                          PHASE STEP {idx + 1}
+                        </span>
+                        <p className="font-sans text-xs text-carbon leading-snug">
+                          {action}
+                        </p>
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Chapter 04: First-Week Action Blueprint */}
-          {activeChapter === "ch4" && (
-            <div className="space-y-6">
-              <div className="space-y-1 border-b-2 border-carbon pb-3">
-                <span className="font-mono text-xs font-bold text-signal-orange">
-                  CHAPTER 04 // TIMELINE
-                </span>
-                <h3 className="font-display font-black text-xl uppercase text-carbon">
-                  Incoming Leader First-Week Action Blueprint
-                </h3>
-              </div>
-
-              <div className="space-y-3 font-mono text-xs">
-                <div className="p-4 border-2 border-carbon bg-raw-paper space-y-1.5">
-                  <div className="flex items-center justify-between text-signal-orange font-bold">
-                    <span>DAY 01 // NOVEMBER 18, 2024</span>
-                    <span>PROTOCOL CO-SIGNATURE</span>
-                  </div>
-                  <p className="font-sans text-xs text-carbon">
-                    Execute formal joint submission of FDA Form 1572 with Dr. Vance. Receive physical lab notebook escrow keys from Facilities Director.
-                  </p>
-                </div>
-
-                <div className="p-4 border-2 border-carbon bg-raw-paper space-y-1.5">
-                  <div className="flex items-center justify-between text-signal-orange font-bold">
-                    <span>DAY 02 // NOVEMBER 19, 2024</span>
-                    <span>VENDOR ALLIANCE REVIEW</span>
-                  </div>
-                  <p className="font-sans text-xs text-carbon">
-                    Review restructured service tier with Apex BioAnalytical Labs. Confirm delivery of written non-renewal notice.
-                  </p>
-                </div>
-
-                <div className="p-4 border-2 border-carbon bg-raw-paper space-y-1.5">
-                  <div className="flex items-center justify-between text-signal-orange font-bold">
-                    <span>DAY 03 // NOVEMBER 20, 2024</span>
-                    <span>ONCOLOGY STEERING COMMITTEE</span>
-                  </div>
-                  <p className="font-sans text-xs text-carbon">
-                    Convene Phase II Oncology trial clinical leads (Sites 101 through 108). Ratify updated reporting channels.
-                  </p>
-                </div>
-
-                <div className="p-4 border-2 border-carbon bg-raw-paper space-y-1.5">
-                  <div className="flex items-center justify-between text-signal-orange font-bold">
-                    <span>DAY 04 // NOVEMBER 21, 2024</span>
-                    <span>PATENT PRIORITY EXECUTION</span>
-                  </div>
-                  <p className="font-sans text-xs text-carbon">
-                    Execute retrieved Exhibit C co-inventor assignment declaration with IP Counsel for European counterpart entry.
-                  </p>
-                </div>
-
-                <div className="p-4 border-2 border-carbon bg-raw-paper space-y-1.5">
-                  <div className="flex items-center justify-between text-industrial-green font-bold">
-                    <span>DAY 05 // NOVEMBER 22, 2024</span>
-                    <span>FORMAL GOVERNANCE TRANSFER</span>
-                  </div>
-                  <p className="font-sans text-xs text-carbon">
-                    Division-wide scientific briefing. Formal assumption of Institutional Biosafety Committee chair.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Chapter 05: Citations & Hashes */}
-          {activeChapter === "ch5" && (
-            <div className="space-y-6">
-              <div className="space-y-1 border-b-2 border-carbon pb-3">
-                <span className="font-mono text-xs font-bold text-signal-orange">
-                  CHAPTER 05 // PROVENANCE
-                </span>
-                <h3 className="font-display font-black text-xl uppercase text-carbon">
-                  Cryptographic Citation Concordance & Hashes
-                </h3>
-              </div>
-
-              <div className="divide-y divide-carbon/20 border border-carbon bg-raw-paper font-mono text-xs">
-                <div className="p-3 space-y-1">
-                  <span className="font-bold text-carbon">DOC-CSO-2024: CSO Transition Protocol v2.4.pdf</span>
-                  <p className="text-[10px] text-carbon/60 break-all">
-                    SHA-256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-                  </p>
-                </div>
-
-                <div className="p-3 space-y-1">
-                  <span className="font-bold text-carbon">DOC-FDA-1572: FDA Form 1572 Investigator Registry.pdf</span>
-                  <p className="text-[10px] text-carbon/60 break-all">
-                    SHA-256: 8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4
-                  </p>
-                </div>
-
-                <div className="p-3 space-y-1">
-                  <span className="font-bold text-carbon">DOC-MSA-82: Spectrometry Lab Services Agreement.docx</span>
-                  <p className="text-[10px] text-carbon/60 break-all">
-                    SHA-256: ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer Audit Stamp */}
-        <div className="p-6 border-t-2 border-carbon bg-concrete/40 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs text-carbon">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 bg-signal-orange" />
-            <span className="font-bold uppercase">RELAY AUDIT VERIFIED: SHA-256 SIGNATURE VALID</span>
-          </div>
-          <span className="text-carbon/60 uppercase text-[10px]">
-            ARCHIVAL COPY PERSISTED TO SQLITE REPOSITORY
-          </span>
+            )}
         </div>
       </article>
     </div>

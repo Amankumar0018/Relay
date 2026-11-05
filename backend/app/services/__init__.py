@@ -24,6 +24,10 @@ from app.services.extraction_service import (
     ExtractionSchemaError,
     ExtractionPersistenceError,
 )
+from app.services.intelligence_analyzer import OrganizationalIntelligenceService
+from app.services.continuity_service import ContinuityService
+from app.services.dossier_service import HandoverDossierService
+from app.services.qa_service import QuestionAnsweringService
 
 __all__ = [
     "TextExtractor",
@@ -47,4 +51,8 @@ __all__ = [
     "ExtractionAuthError",
     "ExtractionSchemaError",
     "ExtractionPersistenceError",
+    "OrganizationalIntelligenceService",
+    "ContinuityService",
+    "HandoverDossierService",
+    "QuestionAnsweringService",
 ]

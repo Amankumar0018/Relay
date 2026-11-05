@@ -507,7 +507,7 @@ class EntityRelationship(Base):
         String(50),
         nullable=False,
         index=True,
-        comment="TRANSFERS_TO, REPORTS_TO, OWNS, BLOCKS, CONTRADICTS",
+        comment="TRANSFERS_TO, REPORTS_TO, OWNS, BLOCKS, CONTRADICTS, SUPERSEDES",
     )
     confidence_score: Mapped[float] = mapped_column(
         Float,

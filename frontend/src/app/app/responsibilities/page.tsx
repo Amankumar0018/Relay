@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   IconTask,
   IconCheck,
@@ -10,6 +10,7 @@ import {
   IconSearch,
 } from "@/components/ui/Icons";
 import { Button } from "@/components/ui/Button";
+import { fetchContinuityOverview, ContinuityOverview } from "@/lib/api";
 
 interface Obligation {
   id: string;
@@ -97,6 +98,45 @@ export default function ResponsibilitiesPage() {
   const [obligations, setObligations] = useState<Obligation[]>(INITIAL_OBLIGATIONS);
   const [filter, setFilter] = useState<"ALL" | "ACTIVE" | "COMPLETED">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [continuity, setContinuity] = useState<ContinuityOverview | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await fetchContinuityOverview();
+        setContinuity(data);
+
+        // If backend returned real critical blockers, convert them to obligations
+        if (data && data.critical_blockers && data.critical_blockers.length > 0) {
+          const liveBlockers: Obligation[] = data.critical_blockers.map((b, idx) => ({
+            id: `live-${b.fact_id}`,
+            code: `BLK-${String(idx + 1).padStart(2, "0")}`,
+            task: b.statement,
+            nature: (b.category === "decision" ? "Delegated Authority" : "Actionable Task") as any,
+            assignedOwner: data.outgoing_leader || "Outgoing Leadership",
+            incomingDelegate: data.incoming_successor || "Incoming Successor",
+            deadline: b.deadline ? new Date(b.deadline).toLocaleDateString() : "Immediate",
+            originatingDecision: `${b.severity.toUpperCase()} Priority Blocker`,
+            dependencies: [`Citations: ${b.citations_count}`],
+            evidenceSource: b.document_filename || "Repository Record",
+            status: "ACTIVE",
+          }));
+
+          setObligations((prev) => {
+            const combined = [...liveBlockers];
+            prev.forEach((p) => {
+              if (!combined.some((c) => c.task.toLowerCase() === p.task.toLowerCase())) {
+                combined.push(p);
+              }
+            });
+            return combined;
+          });
+        }
+      } catch (err) {
+        console.warn("Could not load live continuity overview:", err);
+      }
+    })();
+  }, []);
 
   const toggleStatus = (id: string) => {
     setObligations((prev) =>
@@ -160,97 +200,124 @@ export default function ResponsibilitiesPage() {
         </div>
 
         <div className="flex items-center gap-1.5 font-mono text-xs">
-          {(["ALL", "ACTIVE", "COMPLETED"] as const).map((s) => (
+          {(["ALL", "ACTIVE", "COMPLETED"] as const).map((tab) => (
             <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`px-3 py-1 uppercase text-[11px] font-bold border transition-colors ${
-                filter === s
+              key={tab}
+              onClick={() => setFilter(tab)}
+              className={`px-3 py-1 uppercase font-bold border transition-colors ${
+                filter === tab
                   ? "bg-carbon text-raw-paper border-carbon shadow-brutal"
                   : "bg-raw-paper text-carbon border-carbon/40 hover:border-carbon"
               }`}
             >
-              [{s}]
+              {tab}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Responsibility Table */}
-      <div className="border-2 border-carbon bg-raw-paper-light shadow-brutal overflow-x-auto">
-        <table className="w-full text-left font-mono text-xs divide-y-2 divide-carbon">
-          <thead className="bg-raw-paper uppercase font-bold text-carbon/70 text-[10px]">
-            <tr>
-              <th className="p-3 w-16">CODE</th>
-              <th className="p-3">TASK & PRIMARY EVIDENCE</th>
-              <th className="p-3 w-36">NATURE</th>
-              <th className="p-3 w-48">OWNER → DELEGATE</th>
-              <th className="p-3 w-28">DEADLINE</th>
-              <th className="p-3 w-40">DEPENDENCIES</th>
-              <th className="p-3 w-24 text-right">ACTION</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-carbon/20">
-            {filtered.map((item) => (
-              <tr
-                key={item.id}
-                className={`hover:bg-concrete/30 transition-colors ${
-                  item.status === "COMPLETED" ? "opacity-60 bg-concrete/20" : ""
-                }`}
-              >
-                <td className="p-3 font-bold text-signal-orange">
-                  {item.code}
-                </td>
-                <td className="p-3 space-y-1">
-                  <div className="font-sans font-bold text-sm text-carbon">
-                    {item.task}
-                  </div>
-                  <div className="text-[10px] text-carbon/60">
-                    Source: {item.evidenceSource}
-                  </div>
-                </td>
-                <td className="p-3">
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 bg-concrete border border-carbon text-carbon uppercase">
+      {/* Main Obligations Table / Grid */}
+      <div className="border-2 border-carbon bg-raw-paper shadow-brutal overflow-hidden divide-y-2 divide-carbon">
+        <div className="p-3.5 bg-raw-paper-light border-b-2 border-carbon flex items-center justify-between text-xs font-mono">
+          <span className="font-bold uppercase text-carbon">
+            DIRECTED TRANSITION OBLIGATIONS REGISTER ({filtered.length})
+          </span>
+          <span className="text-carbon/60 uppercase text-[10px]">
+            ALL ACTIONS ANCHORED TO VERIFIED CITATIONS
+          </span>
+        </div>
+
+        {filtered.map((item) => {
+          const isCompleted = item.status === "COMPLETED";
+
+          return (
+            <div
+              key={item.id}
+              className={`p-5 transition-colors space-y-3 ${
+                isCompleted
+                  ? "bg-concrete/20 opacity-70"
+                  : "bg-raw-paper-light hover:bg-concrete/40"
+              }`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-carbon/20 pb-2">
+                <div className="flex items-center gap-2 font-mono text-xs">
+                  <span className="px-1.5 py-0.5 bg-carbon text-raw-paper font-bold">
+                    {item.code}
+                  </span>
+                  <span className="px-2 py-0.5 border border-carbon bg-raw-paper font-bold uppercase text-[10px]">
                     {item.nature}
                   </span>
-                </td>
-                <td className="p-3 space-y-0.5">
-                  <div className="font-bold text-carbon">{item.assignedOwner}</div>
-                  <div className="text-[10px] text-carbon/60">→ {item.incomingDelegate}</div>
-                </td>
-                <td className="p-3">
-                  <span
-                    className={`font-bold ${
-                      item.status === "ACTIVE" ? "text-signal-orange" : "text-carbon/60"
-                    }`}
-                  >
-                    {item.deadline}
+                  <span className="text-carbon/60 text-[11px] truncate">
+                    // ORIGIN: {item.originatingDecision}
                   </span>
-                </td>
-                <td className="p-3 space-y-1">
-                  {item.dependencies.map((dep, idx) => (
-                    <div key={idx} className="text-[10px] text-carbon/80 flex items-center gap-1.5">
-                      <span className="w-1 h-1 bg-carbon" />
-                      <span>{dep}</span>
-                    </div>
-                  ))}
-                </td>
-                <td className="p-3 text-right">
+                </div>
+
+                <div className="flex items-center gap-2 font-mono text-xs">
+                  <span className="text-signal-orange font-bold">
+                    DUE: {item.deadline}
+                  </span>
                   <button
                     onClick={() => toggleStatus(item.id)}
-                    className={`px-2 py-1 text-[10px] uppercase font-bold border transition-colors ${
-                      item.status === "COMPLETED"
+                    className={`px-2 py-0.5 text-[10px] font-bold uppercase border transition-colors ${
+                      isCompleted
                         ? "bg-industrial-green text-raw-paper border-carbon"
                         : "bg-raw-paper text-carbon border-carbon hover:bg-carbon hover:text-raw-paper"
                     }`}
                   >
-                    {item.status === "COMPLETED" ? "DONE" : "TOGGLE"}
+                    {isCompleted ? "✓ COMPLETED" : "MARK DONE"}
                   </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+              </div>
+
+              <div>
+                <h3
+                  className={`font-display font-bold text-base sm:text-lg uppercase text-carbon leading-snug ${
+                    isCompleted ? "line-through opacity-70" : ""
+                  }`}
+                >
+                  {item.task}
+                </h3>
+              </div>
+
+              {/* Stakeholders & Precursors */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono text-xs pt-1">
+                <div className="p-2.5 bg-raw-paper border border-carbon space-y-0.5">
+                  <span className="text-[10px] text-carbon/60 uppercase font-bold block">
+                    ASSIGNED OWNER:
+                  </span>
+                  <span className="font-bold text-carbon block truncate">
+                    {item.assignedOwner}
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-raw-paper border border-carbon space-y-0.5">
+                  <span className="text-[10px] text-carbon/60 uppercase font-bold block">
+                    INCOMING DELEGATE:
+                  </span>
+                  <span className="font-bold text-carbon block truncate">
+                    {item.incomingDelegate}
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-raw-paper border border-carbon space-y-0.5">
+                  <span className="text-[10px] text-carbon/60 uppercase font-bold block">
+                    PRECURSOR DEPENDENCIES:
+                  </span>
+                  <span className="text-carbon/80 text-[11px] block truncate">
+                    {item.dependencies.join(", ")}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] font-mono text-carbon/60 pt-1">
+                <span>EVIDENCE ANCHOR: {item.evidenceSource}</span>
+                <span className="uppercase text-signal-orange font-bold">
+                  Human Sign-Off Mandatory
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

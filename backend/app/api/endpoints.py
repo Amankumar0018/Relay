@@ -7,12 +7,14 @@ from app.core.database import check_db_connection
 from app.schemas.health import RootResponse, HealthResponse
 from app.api.documents import router as documents_router
 from app.api.intelligence import router as intelligence_router
+from app.api.continuity_api import router as continuity_router
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 router.include_router(documents_router)
 router.include_router(intelligence_router)
+router.include_router(continuity_router)
 
 
 @router.get("/", response_model=RootResponse, summary="Root status")
