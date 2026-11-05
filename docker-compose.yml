@@ -8,6 +8,8 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+    env_file:
+      - ./backend/.env
     environment:
       - DATABASE_URL=sqlite:///./relay.db
       - ENVIRONMENT=development
