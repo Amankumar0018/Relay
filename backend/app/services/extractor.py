@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class ExtractionError(Exception):
-    """Raised when text extraction from a document fails."""
+    """Raised when text extraction or segmentation from a document fails."""
     pass
 
 
@@ -15,6 +15,7 @@ class TextExtractor:
     """
     Extracts text from supported file types (PDF, DOCX, TXT).
     Normalizes whitespace and extracts both linear prose and tabular structures.
+    Delegates to DocumentParserService to ensure consistency across extracted text and segments.
     """
 
     @classmethod
@@ -24,20 +25,10 @@ class TextExtractor:
         Returns (extracted_text, character_count, word_count).
         Raises ExtractionError if processing fails.
         """
-        ext = file_extension.lower().lstrip(".")
-        if ext == "txt":
-            text = cls._extract_txt(file_bytes)
-        elif ext == "pdf":
-            text = cls._extract_pdf(file_bytes)
-        elif ext == "docx":
-            text = cls._extract_docx(file_bytes)
-        else:
-            raise ExtractionError(f"Unsupported file extension for extraction: .{ext}")
+        from app.services.segmentation import DocumentParserService
 
-        text = text.strip()
-        char_count = len(text)
-        word_count = len(text.split())
-        return text, char_count, word_count
+        res = DocumentParserService.parse(file_bytes, file_extension)
+        return res.extracted_text, res.character_count, res.word_count
 
     @staticmethod
     def _extract_txt(file_bytes: bytes) -> str:
@@ -65,7 +56,6 @@ class TextExtractor:
 
             if reader.is_encrypted:
                 try:
-                    # Attempt decrypt with empty password for unencrypted permissions
                     reader.decrypt("")
                 except Exception:
                     raise ExtractionError("PDF is encrypted and password protected.")
@@ -101,12 +91,10 @@ class TextExtractor:
             doc = docx.Document(stream)
             content_blocks = []
 
-            # Extract body paragraphs
             for p in doc.paragraphs:
                 if p.text and p.text.strip():
                     content_blocks.append(p.text.strip())
 
-            # Extract tables
             for table in doc.tables:
                 table_lines = []
                 for row in table.rows:
@@ -119,4 +107,3 @@ class TextExtractor:
             return "\n\n".join(content_blocks)
         except (PackageNotFoundError, Exception) as exc:
             raise ExtractionError(f"Malformed or invalid DOCX document: {exc}") from exc
-

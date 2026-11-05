@@ -12,7 +12,9 @@ from sqlalchemy import select, func, desc
 
 from app.core.config import settings
 from app.models.document import Document
-from app.services.extractor import TextExtractor, ExtractionError
+from app.models.knowledge import DocumentSegment
+from app.services.extractor import ExtractionError
+from app.services.segmentation import DocumentParserService
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +39,7 @@ def sanitize_filename(filename: str) -> str:
 class DocumentService:
     """
     Orchestrates validation, physical persistence, cryptographic hashing,
-    text extraction, and database tracking for uploaded institutional records.
+    text extraction, structured segmentation, and database tracking for uploaded institutional records.
     """
 
     @classmethod
@@ -54,7 +56,7 @@ class DocumentService:
         file: UploadFile,
     ) -> Document:
         """
-        Validates, saves, extracts, and registers an uploaded document file.
+        Validates, saves, extracts, segments, and registers an uploaded document file transactionally.
         """
         original_filename = file.filename or "unnamed_file"
         sanitized_name = sanitize_filename(original_filename)
@@ -106,7 +108,8 @@ class DocumentService:
                 detail="Failed to persist document to storage.",
             ) from exc
 
-        # 6. Extract text content
+        # 6. Extract text content & structured segments
+        parse_result = None
         extracted_text = None
         extraction_status = "completed"
         extraction_error = None
@@ -114,7 +117,10 @@ class DocumentService:
         word_count = 0
 
         try:
-            extracted_text, char_count, word_count = TextExtractor.extract(file_bytes, ext)
+            parse_result = DocumentParserService.parse(file_bytes, ext)
+            extracted_text = parse_result.extracted_text
+            char_count = parse_result.character_count
+            word_count = parse_result.word_count
         except ExtractionError as e_err:
             logger.warning("Extraction error for document '%s': %s", original_filename, e_err)
             extraction_status = "failed"
@@ -124,7 +130,7 @@ class DocumentService:
             extraction_status = "failed"
             extraction_error = f"Unexpected extraction error: {u_err}"
 
-        # 7. Record in database
+        # 7. Record in database transactionally
         clean_ext = ext.lstrip(".")
         document = Document(
             id=doc_id,
@@ -143,15 +149,34 @@ class DocumentService:
         )
 
         db.add(document)
+
+        # Add segments if extraction succeeded
+        if extraction_status == "completed" and parse_result and parse_result.segments:
+            for seg_data in parse_result.segments:
+                segment = DocumentSegment(
+                    id=str(uuid.uuid4()),
+                    document_id=doc_id,
+                    segment_type=seg_data.segment_type,
+                    sequence_number=seg_data.sequence_number,
+                    page_number=seg_data.page_number,
+                    section_title=seg_data.section_title,
+                    source_label=seg_data.source_label,
+                    content=seg_data.content,
+                    char_offset_start=seg_data.char_offset_start,
+                    char_offset_end=seg_data.char_offset_end,
+                )
+                db.add(segment)
+
         db.commit()
         db.refresh(document)
 
         logger.info(
-            "Document ingested successfully: id=%s name='%s' size=%d status=%s",
+            "Document ingested successfully: id=%s name='%s' size=%d status=%s segments=%d",
             doc_id,
             original_filename,
             file_size,
             extraction_status,
+            len(parse_result.segments) if parse_result else 0,
         )
         return document
 
@@ -159,6 +184,85 @@ class DocumentService:
     def get_document(cls, db: Session, document_id: str) -> Optional[Document]:
         """Fetches a document record by UUID."""
         return db.scalar(select(Document).where(Document.id == document_id))
+
+    @classmethod
+    def get_document_segments(cls, db: Session, document_id: str) -> List[DocumentSegment]:
+        """Fetches all segments for a document ordered deterministically by sequence_number."""
+        doc = cls.get_document(db, document_id)
+        if not doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Document with ID '{document_id}' not found.",
+            )
+        return list(
+            db.scalars(
+                select(DocumentSegment)
+                .where(DocumentSegment.document_id == document_id)
+                .order_by(DocumentSegment.sequence_number.asc())
+            ).all()
+        )
+
+    @classmethod
+    def segment_document(cls, db: Session, document_id: str) -> List[DocumentSegment]:
+        """
+        Idempotently re-parses and re-segments an existing document from its persisted file.
+        Removes any previous segments and replaces them with newly extracted segments.
+        """
+        document = cls.get_document(db, document_id)
+        if not document:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Document with ID '{document_id}' not found.",
+            )
+
+        if not os.path.exists(document.storage_path):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Physical document file missing from storage.",
+            )
+
+        with open(document.storage_path, "rb") as f:
+            file_bytes = f.read()
+
+        try:
+            parse_result = DocumentParserService.parse(file_bytes, document.file_extension)
+            document.extracted_text = parse_result.extracted_text
+            document.character_count = parse_result.character_count
+            document.word_count = parse_result.word_count
+            document.extraction_status = "completed"
+            document.extraction_error = None
+        except ExtractionError as err:
+            document.extraction_status = "failed"
+            document.extraction_error = str(err)
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Segmentation failed: {err}",
+            )
+
+        # Clear existing segments idempotently before inserting new ones
+        db.query(DocumentSegment).filter(DocumentSegment.document_id == document_id).delete()
+
+        new_segments = []
+        for seg_data in parse_result.segments:
+            seg = DocumentSegment(
+                id=str(uuid.uuid4()),
+                document_id=document_id,
+                segment_type=seg_data.segment_type,
+                sequence_number=seg_data.sequence_number,
+                page_number=seg_data.page_number,
+                section_title=seg_data.section_title,
+                source_label=seg_data.source_label,
+                content=seg_data.content,
+                char_offset_start=seg_data.char_offset_start,
+                char_offset_end=seg_data.char_offset_end,
+            )
+            db.add(seg)
+            new_segments.append(seg)
+
+        db.commit()
+        db.refresh(document)
+        return new_segments
 
     @classmethod
     def list_documents(

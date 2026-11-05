@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, Depends, UploadFile, File, Query, HTTPException, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -14,6 +14,7 @@ from app.schemas.document import (
     DocumentListResponse,
     DocumentUploadResponse,
 )
+from app.schemas.knowledge import DocumentSegmentResponse
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ router = APIRouter(prefix="/api/v1/documents", tags=["Documents"])
     response_model=DocumentUploadResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Ingest institutional record document",
-    description="Uploads a PDF, DOCX, or TXT file, computes its SHA-256 hash, extracts textual content, and stores metadata.",
+    description="Uploads a PDF, DOCX, or TXT file, computes its SHA-256 hash, extracts textual content, segments it into structural blocks, and stores metadata.",
 )
 @router.post(
     "/upload",
@@ -37,7 +38,7 @@ async def upload_document(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ) -> DocumentUploadResponse:
-    """Ingests, validates, persists, and extracts text from an uploaded document."""
+    """Ingests, validates, persists, extracts text, and generates segments from an uploaded document."""
     document = await DocumentService.ingest_document(db, file)
     return DocumentUploadResponse(
         success=True,
@@ -124,6 +125,21 @@ def get_document_text(
 
 
 @router.get(
+    "/{document_id}/segments",
+    response_model=List[DocumentSegmentResponse],
+    summary="Get document segments",
+    description="Retrieves ordered, structured segments extracted from an institutional record.",
+)
+def get_document_segments(
+    document_id: str,
+    db: Session = Depends(get_db),
+) -> List[DocumentSegmentResponse]:
+    """Retrieves all segments for a document ordered by sequence number."""
+    segments = DocumentService.get_document_segments(db, document_id)
+    return [DocumentSegmentResponse.model_validate(seg) for seg in segments]
+
+
+@router.get(
     "/{document_id}/download",
     summary="Download original file",
     description="Streams the original uploaded file from storage.",
@@ -157,7 +173,7 @@ def download_document(
     "/{document_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete document",
-    description="Deletes a document record from the database and removes its file from storage.",
+    description="Deletes a document record from the database, cascading to all segments and removing the physical file.",
 )
 def delete_document(
     document_id: str,
@@ -171,4 +187,3 @@ def delete_document(
             detail=f"Document with ID '{document_id}' not found.",
         )
     return None
-
