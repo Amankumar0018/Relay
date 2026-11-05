@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, TypeVar, Type, Generic
 from pydantic import BaseModel, Field
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class LLMError(Exception):
@@ -28,9 +30,30 @@ class LLMTimeoutError(LLMError):
     pass
 
 
+class LLMResponseValidationError(LLMError):
+    """Raised when the LLM response cannot be parsed or fails schema validation."""
+    pass
+
+
+class LLMResponseTruncatedError(LLMError):
+    """Raised when the LLM response is truncated before completing valid structured output."""
+    pass
+
+
 class LLMResponse(BaseModel):
     """Normalized response payload returned by LLM providers."""
     content: str = Field(..., description="Generated text content")
+    model: str = Field(..., description="Model identifier used for generation")
+    finish_reason: Optional[str] = Field(None, description="Reason generation finished")
+    prompt_tokens: Optional[int] = Field(None, description="Input token count if reported")
+    completion_tokens: Optional[int] = Field(None, description="Output token count if reported")
+    raw_response: Optional[Dict[str, Any]] = Field(None, description="Raw provider metadata if available")
+
+
+class LLMStructuredResponse(BaseModel, Generic[T]):
+    """Normalized structured response payload returned by LLM providers."""
+    data: T = Field(..., description="Parsed and validated Pydantic model instance")
+    content: str = Field(..., description="Raw generated text or JSON string")
     model: str = Field(..., description="Model identifier used for generation")
     finish_reason: Optional[str] = Field(None, description="Reason generation finished")
     prompt_tokens: Optional[int] = Field(None, description="Input token count if reported")
@@ -53,6 +76,24 @@ class BaseLLMProvider(ABC):
     ) -> LLMResponse:
         """
         Executes a minimal text completion request.
+        Raises LLMError sub-classes on failure.
+        """
+        pass
+
+    @abstractmethod
+    def generate_structured(
+        self,
+        prompt: str,
+        response_schema: Type[T],
+        system_instruction: Optional[str] = None,
+        temperature: float = 0.0,
+        max_output_tokens: Optional[int] = None,
+        thinking_budget: Optional[int] = None,
+        model: Optional[str] = None,
+    ) -> LLMStructuredResponse[T]:
+        """
+        Executes a completion request enforcing structured JSON adhering to response_schema.
+        Validates the output against the Pydantic response_schema.
         Raises LLMError sub-classes on failure.
         """
         pass

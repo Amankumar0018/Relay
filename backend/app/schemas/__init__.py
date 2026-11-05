@@ -39,6 +39,14 @@ from app.schemas.knowledge import (
     EntityRelationshipCreate,
     EntityRelationshipResponse,
 )
+from app.schemas.extraction import (
+    RawCitationReference,
+    RawFactExtraction,
+    RawEntityMention,
+    RawEntityExtraction,
+    RawRelationshipExtraction,
+    DocumentExtractionPayload,
+)
 
 __all__ = [
     "RootResponse",
@@ -79,4 +87,10 @@ __all__ = [
     "EntityRelationshipBase",
     "EntityRelationshipCreate",
     "EntityRelationshipResponse",
+    "RawCitationReference",
+    "RawFactExtraction",
+    "RawEntityMention",
+    "RawEntityExtraction",
+    "RawRelationshipExtraction",
+    "DocumentExtractionPayload",
 ]
