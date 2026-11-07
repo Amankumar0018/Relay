@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Relay - System Architecture & Integration Topology</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    width: 1920px;
+    height: 1080px;
+    background-color: #EAE5D8;
+    color: #171717;
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    overflow: hidden;
+    position: relative;
+    padding: 28px 36px;
+    background-image: 
+      linear-gradient(rgba(23, 23, 23, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(23, 23, 23, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .outer-frame {
+    width: 1848px;
+    height: 1024px;
+    border: 2px solid #171717;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: #EAE5D8;
+    box-shadow: 4px 4px 0 rgba(23, 23, 23, 0.15);
+  }
+
+  .corner-mark {
+    position: absolute;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #171717;
+    z-index: 10;
+    line-height: 1;
+  }
+  .corner-tl { top: 8px; left: 8px; }
+  .corner-tr { top: 8px; right: 8px; }
+  .corner-bl { bottom: 8px; left: 8px; }
+  .corner-br { bottom: 8px; right: 8px; }
+
+  /* TOP HEADER */
+  .top-bar {
+    height: 64px;
+    border-bottom: 2px solid #171717;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background-color: #EAE5D8;
+  }
+
+  .brand-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .brand-logo {
+    width: 28px;
+    height: 28px;
+    background-color: #F15A24;
+    border: 2px solid #171717;
+    box-shadow: 2px 2px 0 #171717;
+  }
+
+  .brand-name {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 900;
+    font-size: 24px;
+    letter-spacing: -0.04em;
+    color: #171717;
+  }
+
+  .brand-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #767676;
+    letter-spacing: 0.1em;
+  }
+
+  .top-badges {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border: 1.5px solid #171717;
+    background-color: #F6F3EC;
+    color: #171717;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-dark {
+    background-color: #171717;
+    color: #F6F3EC;
+  }
+
+  .badge-orange {
+    background-color: #F15A24;
+    color: #FFFFFF;
+    border-color: #171717;
+  }
+
+  .pulse-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    background-color: #00C853;
+    border-radius: 50%;
+    margin-right: 6px;
+    box-shadow: 0 0 6px rgba(0, 200, 83, 0.8);
+  }
+
+  /* MAIN CONTENT LAYOUT - 4 COLUMNS */
+  .main-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 380px 320px 760px 344px;
+    border-bottom: 2px solid #171717;
+    background-color: #E2DBD0;
+    gap: 2px;
+  }
+
+  .col-panel {
+    background-color: #EAE5D8;
+    display: flex;
+    flex-direction: column;
+    padding: 18px;
+    position: relative;
+  }
+
+  .col-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #171717;
+    margin-bottom: 14px;
+  }
+
+  .col-title {
+    font-family: 'Archivo', sans-serif;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    color: #171717;
+  }
+
+  .col-code {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: #F15A24;
+  }
+
+  /* CARD STYLING */
+  .tech-card {
+    background-color: #F6F3EC;
+    border: 2px solid #171717;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    box-shadow: 3px 3px 0 #171717;
+    position: relative;
+  }
+
+  .tech-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .tech-card-title {
+    font-family: 'Archivo', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    color: #171717;
+  }
+
+  .tech-card-port {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    background-color: #171717;
+    color: #F6F3EC;
+    padding: 2px 6px;
+  }
+
+  .tech-card-desc {
+    font-size: 11px;
+    line-height: 1.45;
+    color: #4A4A4A;
+    margin-bottom: 6px;
+  }
+
+  .tech-card-meta {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    color: #767676;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tech-card-highlight {
+    background-color: #FFFDF9;
+    border-color: #F15A24;
+    box-shadow: 3px 3px 0 #F15A24;
+  }
+
+  /* MCP TOOL LIST */
+  .mcp-box {
+    background-color: #171717;
+    color: #F6F3EC;
+    border: 2px solid #171717;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 3px 3px 0 rgba(23, 23, 23, 0.4);
+  }
+
+  .mcp-header {
+    font-family: 'Space Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #F15A24;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .mcp-tool-item {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    padding: 4px 6px;
+    background-color: #242424;
+    border-left: 2px solid #F15A24;
+    margin-bottom: 5px;
+    color: #E2DBD0;
+  }
+
+  .mcp-tool-item.secured {
+    border-left: 2px solid #00C853;
+  }
+
+  /* ENGINE GRID OF 8 SERVICES */
+  .services-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .service-item {
+    background-color: #F6F3EC;
+    border: 1.5px solid #171717;
+    padding: 10px 12px;
+    box-shadow: 2px 2px 0 #171717;
+  }
+
+  .service-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: #F15A24;
+    margin-bottom: 2px;
+  }
+
+  .service-name {
+    font-family: 'Archivo', sans-serif;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #171717;
+    margin-bottom: 4px;
+  }
+
+  .service-body {
+    font-size: 10px;
+    line-height: 1.4;
+    color: #555555;
+  }
+
+  .service-item.governance {
+    background-color: #FFF2ED;
+    border: 2px solid #F15A24;
+    box-shadow: 2px 2px 0 #F15A24;
+  }
+
+  /* CONNECTING FLOW BANNER */
+  .pipeline-bar {
+    margin-top: 10px;
+    background-color: #171717;
+    color: #F6F3EC;
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 7px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pipeline-step {
+    color: #F15A24;
+  }
+
+  /* FOOTER */
+  .footer-bar {
+    height: 48px;
+    background-color: #171717;
+    color: #EAE5D8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .footer-tag {
+    color: #F15A24;
+  }
+
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #A0988A;
+  }
+</style>
+</head>
+<body>
+
+<div class="outer-frame">
+  <div class="corner-mark corner-tl">+</div>
+  <div class="corner-mark corner-tr">+</div>
+  <div class="corner-mark corner-bl">+</div>
+  <div class="corner-mark corner-br">+</div>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="brand-group">
+      <div class="brand-logo"></div>
+      <div class="brand-name">RELAY</div>
+      <div class="brand-tag">// SYSTEM ARCHITECTURE & INTEGRATION TOPOLOGY</div>
+    </div>
+    <div class="top-badges">
+      <div class="badge"><span class="pulse-dot"></span>FASTMCP JSON-RPC STDIO</div>
+      <div class="badge">LOCAL-FIRST WAL ENGINE</div>
+      <div class="badge badge-dark">FLIP THE SWITCH 2026</div>
+      <div class="badge badge-orange">ZERO CLOUD RETENTION</div>
+    </div>
+  </div>
+
+  <!-- MAIN 4-COLUMN CONTENT -->
+  <div class="main-content">
+    
+    <!-- COL 1: HUMAN & COLLABORATION LAYER -->
+    <div class="col-panel">
+      <div class="col-header">
+        <div class="col-title">01 // HUMAN & COLLABORATION</div>
+        <div class="col-code">PORTS :52066 / :52067 / :3000</div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-card-header">
+          <div class="tech-card-title">Mattermost Team Edition</div>
+          <div class="tech-card-port">:52067</div>
+        </div>
+        <div class="tech-card-desc">
+          Server-to-server identity verification, Personal Access Token validation, and reviewer session rate limiting (5 attempts/300s).
+        </div>
+        <div class="tech-card-meta">
+          <span>AUTH: PAT / SESSION</span> &bull; <span>ANTI-SPOOF GATE</span>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-card-header">
+          <div class="tech-card-title">Switch Console Desktop</div>
+          <div class="tech-card-port">:52066</div>
+        </div>
+        <div class="tech-card-desc">
+          Multi-agent orchestration workspace, event bus, room-based routing, and collaboration interface for human stewards.
+        </div>
+        <div class="tech-card-meta">
+          <span>EVENT BUS</span> &bull; <span>ROOM ROUTING</span>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-card-header">
+          <div class="tech-card-title">Relay Web Application</div>
+          <div class="tech-card-port">:3000</div>
+        </div>
+        <div class="tech-card-desc">
+          Next.js 15 App Router & React 19 UI: Executive Dashboard, Continuity Topology Radar, and 9-Chapter Briefing Book.
+        </div>
+        <div class="tech-card-meta">
+          <span>EDITORIAL BRUTALISM</span> &bull; <span>SVG RADAR</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 2: AGENT RUNTIME & MCP -->
+    <div class="col-panel">
+      <div class="col-header">
+        <div class="col-title">02 // AGENT & PROTOCOL</div>
+        <div class="col-code">MCP PROTOCOL</div>
+      </div>
+
+      <div class="tech-card tech-card-highlight">
+        <div class="tech-card-header">
+          <div class="tech-card-title">OpenCode Agent</div>
+          <div class="tech-card-port">AGENT</div>
+        </div>
+        <div class="tech-card-desc">
+          Autonomous knowledge investigator configured in <code>opencode.jsonc</code>. Queries records and detects contradictions.
+        </div>
+        <div class="tech-card-meta">
+          <span>MODEL: GEMINI FLASH</span> &bull; <span>SANDBOXED</span>
+        </div>
+      </div>
+
+      <div class="mcp-box">
+        <div class="mcp-header">
+          <span>FASTMCP 5-TOOL INTERFACE</span>
+          <span>STDIO</span>
+        </div>
+        <div class="mcp-tool-item">
+          <strong>relay_deposit_document</strong><br>
+          Ingests text/PDF, extracts & indexes
+        </div>
+        <div class="mcp-tool-item">
+          <strong>relay_ask_question</strong><br>
+          Grounded Q&A with exact citations
+        </div>
+        <div class="mcp-tool-item">
+          <strong>relay_get_conflicts</strong><br>
+          Lists open contradictions & gaps
+        </div>
+        <div class="mcp-tool-item">
+          <strong>relay_request_conflict_resolution</strong><br>
+          Generates 32-byte token for human
+        </div>
+        <div class="mcp-tool-item secured">
+          <strong>relay_resolve_conflict</strong> [RESTRICTED]<br>
+          Finalizes with human approval token
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 3: CORE BACKEND SERVICES -->
+    <div class="col-panel">
+      <div class="col-header">
+        <div class="col-title">03 // RELAY CORE BACKEND SERVICES (FASTAPI 0.115+)</div>
+        <div class="col-code">PORT :8000 / REST API</div>
+      </div>
+
+      <div class="services-grid">
+        <div class="service-item">
+          <div class="service-num">SVC-01 // INGESTION</div>
+          <div class="service-name">Document Segmentation</div>
+          <div class="service-body">
+            Deterministic chunking with byte-level [char_start, char_end] boundaries and SHA-256 integrity hashes.
+          </div>
+        </div>
+
+        <div class="service-item">
+          <div class="service-num">SVC-02 // EXTRACTION</div>
+          <div class="service-name">Gemini 2.5 Flash Engine</div>
+          <div class="service-body">
+            Multimodal structured Pydantic schema extraction: entities, relationships, facts, and verbatim source quotes.
+          </div>
+        </div>
+
+        <div class="service-item">
+          <div class="service-num">SVC-03 // TOPOLOGY</div>
+          <div class="service-name">Entity & Relation Resolver</div>
+          <div class="service-body">
+            Resolves people, projects, assets, and organizations into an institutional knowledge network.
+          </div>
+        </div>
+
+        <div class="service-item">
+          <div class="service-num">SVC-04 // CITATION GATE</div>
+          <div class="service-name">Verbatim Verification Gate</div>
+          <div class="service-body">
+            Strict offset validation: rejects candidate assertions where quotation does not match source byte-for-byte.
+          </div>
+        </div>
+
+        <div class="service-item">
+          <div class="service-num">SVC-05 // INTELLIGENCE</div>
+          <div class="service-name">Property-Aware Conflict Scanner</div>
+          <div class="service-body">
+            Semantic categorization: Direct Contradictions, Superseded Decisions, Ownership Gaps, and Evidence Gaps.
+          </div>
+        </div>
+
+        <div class="service-item governance">
+          <div class="service-num">SVC-06 // GOVERNANCE ★</div>
+          <div class="service-name">Two-Phase Human Approval Gate</div>
+          <div class="service-body">
+            32-byte single-use tokens, SHA-256 hash storage, replay protection, and immutable audit logs.
+          </div>
+        </div>
+
+        <div class="service-item">
+          <div class="service-num">SVC-07 // SYNTHESIS</div>
+          <div class="service-name">9-Chapter Handover Compiler</div>
+          <div class="service-body">
+            Compiles executive briefing book with Day 1–30 Operational Roadmap across 4 structured transition phases.
+          </div>
+        </div>
+
+        <div class="service-item">
+          <div class="service-num">SVC-08 // GROUNDED Q&A</div>
+          <div class="service-name">Honest Refusal Q&A Desk</div>
+          <div class="service-body">
+            Token-match scoring against verified statements; strictly returns refusal when evidence is insufficient.
+          </div>
+        </div>
+      </div>
+
+      <div class="pipeline-bar">
+        <span>DATA PIPELINE:</span>
+        <span class="pipeline-step">01 RAW ARCHIVE</span> ──▶
+        <span class="pipeline-step">02 VERBATIM OFFSETS</span> ──▶
+        <span class="pipeline-step">03 CONFLICT SCAN</span> ──▶
+        <span class="pipeline-step">04 HUMAN GATE</span> ──▶
+        <span class="pipeline-step">05 DOSSIER</span>
+      </div>
+    </div>
+
+    <!-- COL 4: STORAGE & VAULT -->
+    <div class="col-panel">
+      <div class="col-header">
+        <div class="col-title">04 // PERSISTENCE</div>
+        <div class="col-code">LOCAL-FIRST STORAGE</div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-card-header">
+          <div class="tech-card-title">SQLite 3.45 (WAL Mode)</div>
+          <div class="tech-card-port">relay.db</div>
+        </div>
+        <div class="tech-card-desc">
+          Single-file relational engine. Write-Ahead Logging allows concurrent reads during background ingestions.
+        </div>
+        <div class="tech-card-meta">
+          <span>7 CORE RELATIONAL TABLES</span>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <div class="tech-card-header">
+          <div class="tech-card-title">SHA-256 Storage Vault</div>
+          <div class="tech-card-port">/data/uploads</div>
+        </div>
+        <div class="tech-card-desc">
+          Immutable cryptographic local archive storage. Documents are verified by content hash; zero external cloud leaks.
+        </div>
+        <div class="tech-card-meta">
+          <span>ZERO EXTERNAL VECTOR APIS</span>
+        </div>
+      </div>
+
+      <div class="tech-card tech-card-highlight">
+        <div class="tech-card-header">
+          <div class="tech-card-title">Audit Ledger Table</div>
+          <div class="tech-card-port">IMMUTABLE</div>
+        </div>
+        <div class="tech-card-desc">
+          Every conflict resolution seals approver identity, token hash, timestamp, and ratification notes.
+        </div>
+        <div class="tech-card-meta">
+          <span>COMPLIANCE-READY</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM FOOTER -->
+  <div class="footer-bar">
+    <div class="footer-left">
+      <span>TOPOLOGY ENGINE: <span class="footer-tag">FASTAPI + FASTMCP + SWITCH + GEMINI</span></span>
+      <span>&bull;</span>
+      <span>DEPLOYMENT: <span class="footer-tag">DOCKER COMPOSE + NEXT.JS 15</span></span>
+    </div>
+    <div class="footer-right">
+      <span>RELAY CONTINUITY PLATFORM // FLIP THE SWITCH HACKATHON 2026</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

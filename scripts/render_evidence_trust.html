@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Relay - Evidence & Trust: The Three Knowledge States</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    width: 1920px;
+    height: 1080px;
+    background-color: #EAE5D8;
+    color: #171717;
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    overflow: hidden;
+    position: relative;
+    padding: 24px 32px;
+    background-image: 
+      linear-gradient(rgba(23, 23, 23, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(23, 23, 23, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .outer-frame {
+    width: 1856px;
+    height: 1032px;
+    border: 2px solid #171717;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: #EAE5D8;
+    box-shadow: 4px 4px 0 rgba(23, 23, 23, 0.15);
+  }
+
+  .corner-mark {
+    position: absolute;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #171717;
+    z-index: 10;
+    line-height: 1;
+  }
+  .corner-tl { top: 8px; left: 8px; }
+  .corner-tr { top: 8px; right: 8px; }
+  .corner-bl { bottom: 8px; left: 8px; }
+  .corner-br { bottom: 8px; right: 8px; }
+
+  /* TOP HEADER */
+  .top-bar {
+    height: 60px;
+    border-bottom: 2px solid #171717;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background-color: #EAE5D8;
+  }
+
+  .brand-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .brand-logo {
+    width: 28px;
+    height: 28px;
+    background-color: #F15A24;
+    border: 2px solid #171717;
+    box-shadow: 2px 2px 0 #171717;
+  }
+
+  .brand-name {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 900;
+    font-size: 24px;
+    letter-spacing: -0.04em;
+    color: #171717;
+  }
+
+  .brand-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #767676;
+    letter-spacing: 0.1em;
+  }
+
+  .top-badges {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border: 1.5px solid #171717;
+    background-color: #F6F3EC;
+    color: #171717;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-dark {
+    background-color: #171717;
+    color: #F6F3EC;
+  }
+
+  .badge-green {
+    background-color: #2E7D32;
+    color: #FFFFFF;
+    border-color: #171717;
+  }
+
+  .badge-orange {
+    background-color: #F15A24;
+    color: #FFFFFF;
+    border-color: #171717;
+  }
+
+  /* 3 KNOWLEDGE STATES COLUMNS */
+  .states-container {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background-color: #E2DBD0;
+    border-bottom: 2px solid #171717;
+  }
+
+  .state-col {
+    background-color: #EAE5D8;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .state-col-header {
+    border-bottom: 2px solid #171717;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .state-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border: 1.5px solid #171717;
+  }
+
+  .badge-st-1 { background-color: #2E7D32; color: #FFFFFF; }
+  .badge-st-2 { background-color: #F15A24; color: #FFFFFF; }
+  .badge-st-3 { background-color: #171717; color: #FFFFFF; }
+
+  .state-title {
+    font-family: 'Archivo', sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: #171717;
+    margin-bottom: 3px;
+  }
+
+  .state-subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #767676;
+  }
+
+  .state-behavior-box {
+    background-color: #F6F3EC;
+    border: 2px solid #171717;
+    padding: 10px 12px;
+    box-shadow: 3px 3px 0 #171717;
+    margin-bottom: 12px;
+  }
+
+  .state-behavior-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: #171717;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+  }
+
+  .state-behavior-text {
+    font-size: 11px;
+    line-height: 1.45;
+    color: #4A4A4A;
+  }
+
+  /* SIMULATED QUERY / RESPONSE TERMINAL */
+  .terminal-box {
+    background-color: #171717;
+    color: #E2DBD0;
+    border: 2px solid #171717;
+    padding: 12px 14px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Space Mono', monospace;
+    box-shadow: 3px 3px 0 rgba(23, 23, 23, 0.3);
+  }
+
+  .term-header {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #767676;
+    border-bottom: 1px solid #333333;
+    padding-bottom: 5px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .term-query-box {
+    background-color: #212121;
+    border: 1px solid #333333;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+
+  .term-query-label {
+    font-size: 8.5px;
+    color: #767676;
+    margin-bottom: 2px;
+  }
+
+  .term-query {
+    font-size: 10.5px;
+    color: #00C853;
+  }
+
+  .term-eval-block {
+    background-color: #242424;
+    border-left: 2px solid #444444;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    font-size: 9px;
+    line-height: 1.5;
+    color: #AAAAAA;
+  }
+
+  .eval-highlight {
+    color: #F6F3EC;
+    font-weight: 700;
+  }
+
+  .term-response-box {
+    background-color: #1F1F1F;
+    border: 1px solid #333333;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+
+  .term-response-label {
+    font-size: 8.5px;
+    color: #F15A24;
+    margin-bottom: 3px;
+    font-weight: 700;
+  }
+
+  .term-response {
+    font-size: 10px;
+    line-height: 1.45;
+    color: #F6F3EC;
+  }
+
+  .term-cite-card {
+    background-color: #222222;
+    border-left: 3px solid #2E7D32;
+    padding: 8px 10px;
+    font-size: 9px;
+    color: #CCCCCC;
+    line-height: 1.45;
+    margin-top: auto;
+  }
+
+  .term-cite-card.orange {
+    border-left-color: #F15A24;
+  }
+
+  .term-cite-card.refuse {
+    border-left-color: #767676;
+  }
+
+  /* BOTTOM BANNER */
+  .footer-banner {
+    height: 44px;
+    background-color: #171717;
+    color: #EAE5D8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .footer-tag {
+    color: #F15A24;
+  }
+
+  .footer-right {
+    color: #A0988A;
+  }
+</style>
+</head>
+<body>
+
+<div class="outer-frame">
+  <div class="corner-mark corner-tl">+</div>
+  <div class="corner-mark corner-tr">+</div>
+  <div class="corner-mark corner-bl">+</div>
+  <div class="corner-mark corner-br">+</div>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="brand-group">
+      <div class="brand-logo"></div>
+      <div class="brand-name">RELAY</div>
+      <div class="brand-tag">// EVIDENCE & TRUST ARCHITECTURE: THE THREE KNOWLEDGE STATES</div>
+    </div>
+    <div class="top-badges">
+      <div class="badge badge-green">GROUNDED PROVENANCE</div>
+      <div class="badge badge-orange">CONTRADICTION SCAN</div>
+      <div class="badge badge-dark">HONEST REFUSAL POLICY</div>
+    </div>
+  </div>
+
+  <!-- 3 KNOWLEDGE STATES GRID -->
+  <div class="states-container">
+
+    <!-- STATE 1: EVIDENCE AVAILABLE -->
+    <div class="state-col">
+      <div class="state-col-header">
+        <div>
+          <div class="state-title">01 // EVIDENCE AVAILABLE</div>
+          <div class="state-subtitle">GROUNDED AFFIRMATION WITH CITATIONS</div>
+        </div>
+        <div class="state-badge badge-st-1">CONFIRMED</div>
+      </div>
+
+      <div class="state-behavior-box">
+        <div class="state-behavior-label">System Behavior</div>
+        <div class="state-behavior-text">
+          When primary records contain evidence-backed assertions, Relay formulates an exact answer and validates character offsets against primary document segments.
+        </div>
+      </div>
+
+      <div class="terminal-box">
+        <div class="term-header">
+          <span>Q&A TELEMETRY</span>
+          <span>CONFIDENCE: 0.95 &bull; VALID</span>
+        </div>
+
+        <div class="term-query-box">
+          <div class="term-query-label">INPUT QUESTION</div>
+          <div class="term-query">&gt; "What is Project Aegis Beta launch date?"</div>
+        </div>
+
+        <div class="term-eval-block">
+          EVAL: <span class="eval-highlight">Token Match [aegis, beta, launch, date]</span><br>
+          RESOLVED FACT: <code>fact_82f1</code> (Postponed Date: 2027-02-01)<br>
+          OFFSET CHECK: <code>seg.content[312:358] == verbatim_quote</code><br>
+          STATUS: <span style="color:#00C853; font-weight:700;">PASSED VERIFICATION GATE</span>
+        </div>
+
+        <div class="term-response-box">
+          <div class="term-response-label">RELAY SYNTHESIZED RESPONSE</div>
+          <div class="term-response">
+            "Project Aegis Beta has been officially postponed to February 1, 2027 following staging cluster stress reviews."
+          </div>
+        </div>
+
+        <div class="term-cite-card">
+          <strong>VERBATIM SOURCE CITATION:</strong><br>
+          Doc: <code>Project Aegis Schedule Postponement.txt</code><br>
+          Segment: <code>seg_a49f</code> &bull; Offsets: <code>[312..358]</code><br>
+          Quote: <em>"Project Aegis Beta has been officially postponed to February 1, 2027."</em>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATE 2: CONFLICTING EVIDENCE -->
+    <div class="state-col">
+      <div class="state-col-header">
+        <div>
+          <div class="state-title">02 // CONFLICTING EVIDENCE</div>
+          <div class="state-subtitle">SURFACE CONTRADICTION & REQUEST REVIEW</div>
+        </div>
+        <div class="state-badge badge-st-2">FLAGGED</div>
+      </div>
+
+      <div class="state-behavior-box">
+        <div class="state-behavior-label">System Behavior</div>
+        <div class="state-behavior-text">
+          When records present conflicting values, Relay refuses to pick arbitrarily. It displays both claims side-by-side and initiates human adjudication.
+        </div>
+      </div>
+
+      <div class="terminal-box">
+        <div class="term-header">
+          <span>DISCREPANCY SCANNER</span>
+          <span>CONFLICT #f11b799f &bull; CRITICAL</span>
+        </div>
+
+        <div class="term-query-box">
+          <div class="term-query-label">INPUT QUESTION</div>
+          <div class="term-query">&gt; "When is Project Odyssey launching?"</div>
+        </div>
+
+        <div class="term-eval-block">
+          PROPERTY KEY: <span class="eval-highlight">project:odyssey:milestone:beta</span><br>
+          CLAIM A: <code>2026-11-15</code> (Odyssey Launch Plan)<br>
+          CLAIM B: <code>2026-12-20</code> (Amendment Memo)<br>
+          TOKEN GENERATED: <code>token_id: req_883a91 (32-byte hash)</code>
+        </div>
+
+        <div class="term-response-box">
+          <div class="term-response-label">RELAY CONFLICT AUDIT NOTICE</div>
+          <div class="term-response">
+            "DISCREPANCY DETECTED: Two competing dates are recorded in primary archives. Both claims are presented below for human governance."
+          </div>
+        </div>
+
+        <div class="term-cite-card orange">
+          <strong>COMPETING CLAIMS DETECTED:</strong><br>
+          &bull; <strong>Claim A (Nov 15, 2026):</strong> <code>Odyssey Launch Plan.txt</code><br>
+          &bull; <strong>Claim B (Dec 20, 2026):</strong> <code>Schedule Amendment Memo.txt</code><br>
+          Governance: <em>Requires authenticated human adjudication via Mattermost. Zero agent unilateral override.</em>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATE 3: INSUFFICIENT EVIDENCE -->
+    <div class="state-col">
+      <div class="state-col-header">
+        <div>
+          <div class="state-title">03 // INSUFFICIENT EVIDENCE</div>
+          <div class="state-subtitle">HONEST REFUSAL (ZERO HALLUCINATION)</div>
+        </div>
+        <div class="state-badge badge-st-3">REFUSAL</div>
+      </div>
+
+      <div class="state-behavior-box">
+        <div class="state-behavior-label">System Behavior</div>
+        <div class="state-behavior-text">
+          When queries ask about topics not supported by deposited archives, Relay explicitly refuses to answer rather than fabricating a speculative hallucination.
+        </div>
+      </div>
+
+      <div class="terminal-box">
+        <div class="term-header">
+          <span>GROUNDING THRESHOLD</span>
+          <span>SCORE: 0.00 &bull; UNGROUNDED</span>
+        </div>
+
+        <div class="term-query-box">
+          <div class="term-query-label">INPUT QUESTION</div>
+          <div class="term-query">&gt; "Who is on call for Redis cluster Beta-3?"</div>
+        </div>
+
+        <div class="term-eval-block">
+          EXTRACTED TOKENS: <span class="eval-highlight">[redis, cluster, beta-3, on-call]</span><br>
+          TOKEN FILTER: <code>common stop-words pruned</code><br>
+          MATCHED RECORDS: <code>0 statements found in vault</code><br>
+          EVAL: <span style="color:#F15A24; font-weight:700;">BELOW MINIMUM THRESHOLD ──▶ REFUSAL</span>
+        </div>
+
+        <div class="term-response-box">
+          <div class="term-response-label">RELAY HONEST REFUSAL</div>
+          <div class="term-response">
+            "Insufficient evidence in current institutional records. The deposited documentation does not contain verified claims regarding this topic."
+          </div>
+        </div>
+
+        <div class="term-cite-card refuse">
+          <strong>GROUNDING EVALUATION RESULT:</strong><br>
+          <code>has_sufficient_evidence: false</code> &bull; <code>confidence: 0.0</code><br>
+          <code>citations: []</code><br>
+          Policy: <em>"An honest refusal protects leaders from catastrophic operational assumptions."</em>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM FOOTER -->
+  <div class="footer-banner">
+    <div>
+      <span>EVIDENCE CHAIN OF CUSTODY: <span class="footer-tag">PROVENANCE ──▶ AUDITABILITY ──▶ BOUNDED AUTHORITY</span></span>
+    </div>
+    <div class="footer-right">
+      <span>RELAY CONTINUITY PLATFORM // ZERO UNSUPPORTED ASSERTIONS</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

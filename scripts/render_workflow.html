@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Relay - End-to-End Continuity Lifecycle Workflow</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    width: 1920px;
+    height: 1080px;
+    background-color: #EAE5D8;
+    color: #171717;
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    overflow: hidden;
+    position: relative;
+    padding: 24px 32px;
+    background-image: 
+      linear-gradient(rgba(23, 23, 23, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(23, 23, 23, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .outer-frame {
+    width: 1856px;
+    height: 1032px;
+    border: 2px solid #171717;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: #EAE5D8;
+    box-shadow: 4px 4px 0 rgba(23, 23, 23, 0.15);
+  }
+
+  .corner-mark {
+    position: absolute;
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: #171717;
+    z-index: 10;
+    line-height: 1;
+  }
+  .corner-tl { top: 8px; left: 8px; }
+  .corner-tr { top: 8px; right: 8px; }
+  .corner-bl { bottom: 8px; left: 8px; }
+  .corner-br { bottom: 8px; right: 8px; }
+
+  /* TOP HEADER */
+  .top-bar {
+    height: 60px;
+    border-bottom: 2px solid #171717;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background-color: #EAE5D8;
+  }
+
+  .brand-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .brand-logo {
+    width: 28px;
+    height: 28px;
+    background-color: #F15A24;
+    border: 2px solid #171717;
+    box-shadow: 2px 2px 0 #171717;
+  }
+
+  .brand-name {
+    font-family: 'Archivo', sans-serif;
+    font-weight: 900;
+    font-size: 24px;
+    letter-spacing: -0.04em;
+    color: #171717;
+  }
+
+  .brand-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #767676;
+    letter-spacing: 0.1em;
+  }
+
+  .top-badges {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border: 1.5px solid #171717;
+    background-color: #F6F3EC;
+    color: #171717;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-dark {
+    background-color: #171717;
+    color: #F6F3EC;
+  }
+
+  .badge-orange {
+    background-color: #F15A24;
+    color: #FFFFFF;
+    border-color: #171717;
+  }
+
+  /* WORKFLOW STAGE GRID */
+  .workflow-container {
+    flex: 1;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-bottom: 2px solid #171717;
+  }
+
+  .row-label-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: #767676;
+    margin-bottom: 8px;
+  }
+
+  .workflow-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .stage-card {
+    background-color: #F6F3EC;
+    border: 2px solid #171717;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 3px 3px 0 #171717;
+    position: relative;
+    height: 380px;
+  }
+
+  .stage-card-human {
+    background-color: #FFF2ED;
+    border: 2.5px solid #F15A24;
+    box-shadow: 4px 4px 0 #F15A24;
+  }
+
+  .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1.5px solid #171717;
+  }
+
+  .stage-card-human .stage-header {
+    border-bottom-color: #F15A24;
+  }
+
+  .stage-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #F15A24;
+  }
+
+  .stage-type {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    background-color: #171717;
+    color: #F6F3EC;
+    padding: 2px 6px;
+  }
+
+  .stage-card-human .stage-type {
+    background-color: #F15A24;
+    color: #FFFFFF;
+  }
+
+  .stage-title {
+    font-family: 'Archivo', sans-serif;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: #171717;
+    margin-bottom: 6px;
+  }
+
+  .stage-desc {
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: #4A4A4A;
+    margin-bottom: 10px;
+  }
+
+  .stage-details {
+    background-color: #FFFFFF;
+    border: 1px solid #171717;
+    padding: 8px 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    color: #333333;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    flex: 1;
+  }
+
+  .stage-card-human .stage-details {
+    background-color: #FFFFFF;
+    border-color: #F15A24;
+  }
+
+  .detail-bullet {
+    color: #F15A24;
+    font-weight: 700;
+  }
+
+  .stage-meta-box {
+    background-color: #EAE5D8;
+    border: 1px solid #171717;
+    padding: 6px 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: #171717;
+    line-height: 1.4;
+    margin-top: auto;
+  }
+
+  .stage-card-human .stage-meta-box {
+    background-color: #FFE5DB;
+    border-color: #F15A24;
+    color: #9A2400;
+    font-weight: 700;
+  }
+
+  /* DIRECTIONAL CONNECTORS */
+  .flow-banner {
+    background-color: #171717;
+    color: #F6F3EC;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    border: 2px solid #171717;
+  }
+
+  .flow-axiom {
+    color: #F15A24;
+  }
+
+  /* FOOTER */
+  .footer-bar {
+    height: 44px;
+    background-color: #171717;
+    color: #EAE5D8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .footer-tag {
+    color: #F15A24;
+  }
+
+  .footer-right {
+    color: #A0988A;
+  }
+</style>
+</head>
+<body>
+
+<div class="outer-frame">
+  <div class="corner-mark corner-tl">+</div>
+  <div class="corner-mark corner-tr">+</div>
+  <div class="corner-mark corner-bl">+</div>
+  <div class="corner-mark corner-br">+</div>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="brand-group">
+      <div class="brand-logo"></div>
+      <div class="brand-name">RELAY</div>
+      <div class="brand-tag">// END-TO-END ORGANIZATIONAL CONTINUITY LIFECYCLE</div>
+    </div>
+    <div class="top-badges">
+      <div class="badge">8-STAGE DETERMINISTIC PIPELINE</div>
+      <div class="badge badge-orange">★ CRYPTOGRAPHIC HUMAN GOVERNANCE</div>
+      <div class="badge badge-dark">FLIP THE SWITCH 2026</div>
+    </div>
+  </div>
+
+  <!-- WORKFLOW CONTAINER -->
+  <div class="workflow-container">
+
+    <!-- ROW 1: INGESTION TO CONFLICT DETECTION -->
+    <div class="row-label-bar">
+      <span>PHASE I: INGESTION, STRUCTURAL EXTRACTION & CONFLICT DISCOVERY</span>
+      <span>01 ──▶ 02 ──▶ 03 ──▶ 04</span>
+    </div>
+    <div class="workflow-grid">
+
+      <!-- STAGE 1 -->
+      <div class="stage-card">
+        <div class="stage-header">
+          <div class="stage-number">01 // INGESTION</div>
+          <div class="stage-type">DEPOSITION</div>
+        </div>
+        <div class="stage-title">Document Deposition</div>
+        <div class="stage-desc">
+          User uploads primary records (PDFs, text memos, charters, and roadmaps).
+        </div>
+        <div class="stage-details">
+          <span class="detail-bullet">&bull;</span> Computes cryptographic SHA-256 hash<br>
+          <span class="detail-bullet">&bull;</span> Immutable storage in <code>/data/uploads</code><br>
+          <span class="detail-bullet">&bull;</span> Zero external cloud vector leakage<br>
+          <span class="detail-bullet">&bull;</span> Extracts exact segment character spans
+        </div>
+        <div class="stage-meta-box">
+          INPUT: PDF / TXT / DOCX<br>
+          OUTPUT: SHA-256 Vault Record
+        </div>
+      </div>
+
+      <!-- STAGE 2 -->
+      <div class="stage-card">
+        <div class="stage-header">
+          <div class="stage-number">02 // EXTRACTION</div>
+          <div class="stage-type">GEMINI FLASH</div>
+        </div>
+        <div class="stage-title">Structured Extraction</div>
+        <div class="stage-desc">
+          Multimodal Gemini 2.5 Flash processes document segment text into structured schemas.
+        </div>
+        <div class="stage-details">
+          <span class="detail-bullet">&bull;</span> Strict Pydantic v2 extraction schemas<br>
+          <span class="detail-bullet">&bull;</span> Entities: person, project, asset, org<br>
+          <span class="detail-bullet">&bull;</span> Relations: OWNS, STEWARDS, SUPERSEDES<br>
+          <span class="detail-bullet">&bull;</span> Extracts verbatim supporting quotes
+        </div>
+        <div class="stage-meta-box">
+          SCHEMA: Pydantic v2 Extraction<br>
+          EXTRACTS: Entities, Triples, Quotes
+        </div>
+      </div>
+
+      <!-- STAGE 3 -->
+      <div class="stage-card">
+        <div class="stage-header">
+          <div class="stage-number">03 // GROUNDING</div>
+          <div class="stage-type">VERIFICATION</div>
+        </div>
+        <div class="stage-title">Knowledge Construction</div>
+        <div class="stage-desc">
+          Deterministic citation gate matches quotations byte-for-byte against primary text.
+        </div>
+        <div class="stage-details">
+          <span class="detail-bullet">&bull;</span> Locates quote in <code>DocumentSegment</code><br>
+          <span class="detail-bullet">&bull;</span> Enforces <code>seg.content[start:end] == quote</code><br>
+          <span class="detail-bullet">&bull;</span> Binds facts to <code>[char_start, char_end]</code><br>
+          <span class="detail-bullet">&bull;</span> Rejects ungrounded claims with reason
+        </div>
+        <div class="stage-meta-box">
+          COORDINATES: [char_start, char_end]<br>
+          INVARIANT: Byte-Exact Slicing Gate
+        </div>
+      </div>
+
+      <!-- STAGE 4 -->
+      <div class="stage-card">
+        <div class="stage-header">
+          <div class="stage-number">04 // INTELLIGENCE</div>
+          <div class="stage-type">CONFLICT SCAN</div>
+        </div>
+        <div class="stage-title">Conflict Detection</div>
+        <div class="stage-desc">
+          Property-aware analyzer scans facts for logical contradictions and ownership voids.
+        </div>
+        <div class="stage-details">
+          <span class="detail-bullet">&bull;</span> Matches <code>entity:property</code> keys<br>
+          <span class="detail-bullet">&bull;</span> <strong>Direct Contradiction:</strong> Incompatible dates<br>
+          <span class="detail-bullet">&bull;</span> <strong>Superseded Decision:</strong> Amendment clause<br>
+          <span class="detail-bullet">&bull;</span> <strong>Ownership Gap:</strong> Unassigned cloud asset
+        </div>
+        <div class="stage-meta-box">
+          CATEGORIES: Contradiction / Gap / Superseded<br>
+          SEVERITY: Critical / High / Medium
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ROW 2: AGENT INVESTIGATION TO INCOMING LEADER Q&A -->
+    <div class="row-label-bar">
+      <span>PHASE II: AGENT INVESTIGATION, HUMAN GOVERNANCE & HANDOVER CONTINUITY</span>
+      <span>05 ──▶ 06 ──▶ 07 ──▶ 08</span>
+    </div>
+    <div class="workflow-grid">
+
+      <!-- STAGE 5 -->
+      <div class="stage-card">
+        <div class="stage-header">
+          <div class="stage-number">05 // AGENT DESK</div>
+          <div class="stage-type">OPENCODE</div>
+        </div>
+        <div class="stage-title">Agent Investigation</div>
+        <div class="stage-desc">
+          OpenCode agent running inside Switch workspace queries Relay via FastMCP tools.
+        </div>
+        <div class="stage-details">
+          <span class="detail-bullet">&bull;</span> <code>relay_get_conflicts(status="open")</code><br>
+          <span class="detail-bullet">&bull;</span> <code>relay_ask_question("amendment reason")</code><br>
+          <span class="detail-bullet">&bull;</span> Unmasks context across competing memos<br>
+          <span class="detail-bullet">&bull;</span> Prepares human adjudication packet
+        </div>
+        <div class="stage-meta-box">
+          PROTOCOL: FastMCP (stdio JSON-RPC)<br>
+          TOOLS: 5 Registered MCP Functions
+        </div>
+      </div>
+
+      <!-- STAGE 6 - HUMAN AUTHORITY (HIGHLIGHTED) -->
+      <div class="stage-card stage-card-human">
+        <div class="stage-header">
+          <div class="stage-number">06 // GOVERNANCE ★</div>
+          <div class="stage-type">HUMAN AUTHORITY</div>
+        </div>
+        <div class="stage-title">Human Adjudication</div>
+        <div class="stage-desc">
+          ★ HARD SECURITY BOUNDARY: Agent cannot resolve. Only authenticated human decides.
+        </div>
+        <div class="stage-details">
+          <span class="detail-bullet">&bull;</span> Generates 32-byte single-use token<br>
+          <span class="detail-bullet">&bull;</span> Reviewer authenticates via Mattermost<br>
+          <span class="detail-bullet">&bull;</span> Replay protection & token consumption<br>
+          <span class="detail-bullet">&bull;</span> Seals immutable audit log entry
+        </div>
+        <div class="stage-meta-box">
+          SECURITY: 32-Byte Token • Replay Lock<br>
+          AUTHORITY: Authenticated Human Reviewer
+        </div>
+      </div>
+
+      <!-- STAGE 7 -->
+      <div class="stage-card">
+        <div class="stage-header">
+          <div class="stage-number">07 // SYNTHESIS</div>
+          <div class="stage-type">COMPILATION</div>
+        </div>
+        <div class="stage-title">Handover Generation</div>
+        <div class="stage-desc">
+          Automated compilation of executive continuity records into an actionable dossier.
+        </div>
+        <div class="stage-details">
+          <span class="detail-bullet">&bull;</span> 9 Comprehensive thematic chapters<br>
+          <span class="detail-bullet">&bull;</span> Chronological Day 1–30 Roadmap<br>
+          <span class="detail-bullet">&bull;</span> Segregates open vs resolved matters<br>
+          <span class="detail-bullet">&bull;</span> Exports: Interactive / Markdown / JSON
+        </div>
+        <div class="stage-meta-box">
+          DELIVERABLE: 9-Chapter Handover Dossier<br>
+          ROADMAP: Day 1–30 Operational Transition
+        </div>
+      </div>
+
+      <!-- STAGE 8 -->
+      <div class="stage-card">
+        <div class="stage-header">
+          <div class="stage-number">08 // CONTINUITY</div>
+          <div class="stage-type">GROUNDED Q&A</div>
+        </div>
+        <div class="stage-title">Incoming-Leader Q&A</div>
+        <div class="stage-desc">
+          Successor interrogates institutional memory using natural-language questions.
+        </div>
+        <div class="stage-details">
+          <span class="detail-bullet">&bull;</span> Token-match fact scoring engine<br>
+          <span class="detail-bullet">&bull;</span> Returns verbatim quotes with offsets<br>
+          <span class="detail-bullet">&bull;</span> Honest refusal when evidence is absent<br>
+          <span class="detail-bullet">&bull;</span> Protects leader from false assumptions
+        </div>
+        <div class="stage-meta-box">
+          PRECISION: Verbatim Source Citations<br>
+          POLICY: Honest Refusal (No Hallucination)
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PIPELINE BANNER -->
+    <div class="flow-banner">
+      <div>
+        <span class="flow-axiom">★ THE RELAY GROUNDING AXIOM:</span>
+        Agents forensic-analyze & propose &bull; Authority to ratify institutional truth belongs exclusively to authenticated humans.
+      </div>
+      <div>
+        PIPELINE INTEGRATION: <span>SWITCH &bull; OPENCODE &bull; FASTMCP &bull; GEMINI &bull; MATTERMOST</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM FOOTER -->
+  <div class="footer-bar">
+    <div>
+      <span>ARCHITECTURE: <span class="footer-tag">EVIDENCE-GROUNDED CONTINUITY ENGINE</span></span>
+      <span> &bull; </span>
+      <span>AUTOMATED TESTS: <span class="footer-tag">229 VERIFIED (0 FAILURES)</span></span>
+    </div>
+    <div class="footer-right">
+      <span>RELAY CONTINUITY PLATFORM // TRACK: BEST BUSINESS WORKFLOW</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

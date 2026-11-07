@@ -20,6 +20,11 @@
 
 ---
 
+![Relay Technical Blog Cover](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/blog/assets/relay-blog-cover.png)
+*Figure A: The Relay Institutional Continuity Platform — synthesizing primary organizational records into an audited, evidence-grounded transition intelligence system.*
+
+---
+
 ## 1. The Anatomy of Organizational Amnesia
 
 Every growing organization eventually suffers from structural amnesia. It rarely happens with a catastrophic announcement; it happens quietly, across two dozen Google Drive folders, three archived Slack channels, and a departing executive’s hard drive.
@@ -55,6 +60,11 @@ We built **Relay** to solve this. Relay is an active, evidence-grounded institut
 ## 2. What We Built
 
 From the user's perspective, Relay operates as an autonomous forensic intelligence desk that transforms disorganized organizational archives into an audited continuity graph:
+
+![Relay End-to-End Workflow](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/blog/assets/relay-workflow.png)
+*Figure B: The 8-stage organizational continuity lifecycle — from cryptographic archive deposition to human-governed conflict adjudication and 9-chapter briefing book synthesis.*
+
+The end-to-end lifecycle follows an 8-stage deterministic pipeline:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -101,6 +111,9 @@ When incoming leader Marcus Vance opens the Relay Workspace, they do not see a c
 ## 4. System Architecture & Engineering Implementation
 
 Relay is architectured as a decoupled, local-first platform designed to run in air-gapped or high-security corporate environments.
+
+![Relay System Architecture](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/blog/assets/relay-architecture.png)
+*Figure C: Relay full-stack systems architecture and integration topology — connecting Mattermost human authentication, the Switch desktop workspace, OpenCode agents, FastMCP JSON-RPC tools, FastAPI core services, and local SQLite WAL storage.*
 
 ```mermaid
 flowchart TD
@@ -494,9 +507,23 @@ Accompanying the dossier is a chronological **Day 1–30 Operational Roadmap**:
 
 ---
 
-### 4.8 Grounded Q&A with Honest Refusal
+### 4.8 Grounded Q&A with Honest Refusal: The Three Knowledge States
 
-A critical requirement for institutional intelligence is knowing when to say *"I don't know."*
+A critical requirement for institutional intelligence is knowing when to say *"I don't know."* Standard enterprise chatbots and conversational RAG pipelines suffer from dangerous over-confidence: they smooth over logical contradictions, interpolate between conflicting dates, or synthesize plausible-sounding fiction when records are silent.
+
+Relay eliminates this vulnerability by enforcing three unambiguous knowledge states:
+
+![Relay Evidence and Trust Architecture](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/blog/assets/relay-evidence-trust.png)
+*Figure D: The Three Knowledge States of Relay — distinguishing grounded affirmation with character offsets, semantic contradiction review, and honest refusal.*
+
+#### State 1: Evidence Available (Grounded Affirmation with Citations)
+When deposited institutional records contain evidence-backed assertions, Relay formulates an exact, concise response. Crucially, the response is bound to exact character offsets (`[char_start, char_end]`) in primary document segments, verified by the runtime slicing invariant `assert seg.content[start:end] == verbatim_quote`.
+
+#### State 2: Conflicting Evidence (Surface Contradiction & Request Review)
+When multiple records claim incompatible values for the same institutional property (such as two conflicting launch dates for Project Odyssey), Relay strictly refuses to arbitrarily pick one or hallucinate a compromise. Instead, it surfaces both competing claims side-by-side with full bibliographic context and issues a 32-byte single-use cryptographic approval token so an authorized human can ratify the active reality.
+
+#### State 3: Insufficient Evidence (Honest Refusal / Zero Hallucination)
+When an incoming leader queries topics not supported by deposited archives, Relay evaluates domain token matches against statements and canonical entity names. If token scores fall below the minimum grounding threshold, Relay returns an explicit, honest refusal rather than guessing:
 
 In `backend/app/services/qa_service.py`, when a user queries Relay:
 1. Relay extracts specific domain tokens, discarding common stop words and generic domain terms.
@@ -530,6 +557,18 @@ Every tool in Relay's stack was selected to solve a concrete engineering require
 | **Mattermost Team Edition** | Human Authentication & Webhook Target | Secure, open-source enterprise chat supporting server-to-server user verification via Personal Access Tokens. |
 | **Next.js 15 (App Router) & React 19** | Industrial Editorial Brutalist UI | Server-side rendering, instant page transitions, strict TypeScript type safety, and custom SVG visualizers. |
 | **Docker & Docker Compose** | Reproducible Deployment | Encapsulates the Python backend and database environment with zero host configuration drift. |
+
+### 5.1 Architectural Decisions & Engineering Trade-Offs
+
+Building an institutional memory platform requires choosing between competing engineering trade-offs. The following table details the core architectural decisions made during Relay's development:
+
+| Architectural Dimension | Chosen Implementation | Alternative Rejected | Engineering Trade-Off & Rationale |
+|:---|:---|:---|:---|
+| **Knowledge Representation** | Relational SQLite WAL Schema (`facts`, `citations`, `entities`, `conflicts`) | Vector-Only Database / Embedding Index | Vector similarity cannot enforce exact logical constraints or character-level auditability. Relational schemas enable deterministic conflict detection, explicit foreign key cascades, and single-file zero-configuration local deployment. |
+| **Evidence Provenance** | Byte-Exact Slicing Gate (`char_start`, `char_end`) | Loose Paragraph / Document-Level Citations | Unanchored citations allow AI models to hallucinate plausible facts with fake references. Enforcing `seg.content[start:end] == quote` at ingestion guarantees an uncorrupted chain of custody back to primary documents. |
+| **Conflict Discovery** | Property-Aware Semantic Categorization (`entity:prop:val`) | LLM Prompt Comparison / Vector Cosine Distance | Semantic embedding distance flags different wordings of identical dates as contradictions and misses actual date incompatibilities. Property profiling categorizes conflicts deterministically into contradictions, superseded decisions, and ownership voids. |
+| **Governance & Authority** | Two-Phase 32-Byte Cryptographic Tokens & Mattermost Auth | Autonomous Agent Direct Database Writes | Allowing an LLM agent write access to resolve corporate records introduces prompt injection and unauthorized policy alteration risks. Agents only propose resolutions; ratification requires authenticated human token consumption. |
+| **Information Retrieval** | Grounded Refusal with Token Match Scoring | Generative RAG with Conversational Smoothing | Conversational chatbots attempt to please the user by guessing answers when context is sparse. In leadership transitions, an honest refusal (*"Zero records found"*) prevents costly operational failures. |
 
 ---
 
@@ -593,12 +632,18 @@ The platform synthesizes institutional memory into an evidence-backed briefing b
 
 ---
 
-## 7. How to Run Relay Locally
+## 7. How to Run Relay Locally (Try Relay Yourself)
+
+Relay is built as an open, local-first platform designed to run in air-gapped or developer environments with zero cloud vector dependencies. You can spin up the full stack in under five minutes.
+
+* **GitHub Repository**: [https://github.com/Amankumar0018/Relay](https://github.com/Amankumar0018/Relay)
+* **License**: MIT Open Source License
+* **Target Environment**: Windows, macOS, or Linux (Docker / Native Python 3.12 + Node 18+)
 
 ### Prerequisites
 * **Python**: v3.11 or v3.12
-* **Node.js**: v18.0.0 or higher
-* **Docker Desktop**: With Docker Compose v2+
+* **Node.js**: v18.0.0 or higher (v20+ recommended)
+* **Docker Desktop**: With Docker Compose v2+ (optional for native runs)
 * **Git**: Installed and configured
 
 ### Step 1: Clone the Repository
@@ -621,15 +666,30 @@ SWITCH_OPERATOR_SECRET=generate_a_random_32_char_secret_string
 DATABASE_URL=sqlite:///./relay.db
 ```
 
-### Step 3: Start the Backend via Docker
+### Step 3: Run the Backend & Verified Test Suite
+
+You can run the backend via Docker Compose:
 ```bash
 docker compose up -d --build
 ```
 
-Verify backend health:
+Or run natively with Python:
 ```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
+
+Verify backend health and run the 229-test automated regression suite:
+```bash
+# Health check
 curl http://localhost:8000/health
 # Expected: {"status":"ok","database":"connected","environment":"development","version":"0.1.0"}
+
+# Execute test suite (229 verified unit and integration tests)
+pytest backend/tests -v
 ```
 
 ### Step 4: Run the Next.js Frontend
@@ -656,6 +716,8 @@ Add the Relay FastMCP server to your Switch agent's `opencode.jsonc`:
   }
 }
 ```
+
+Once registered, the Switch agent can autonomously query `relay_get_conflicts`, `relay_ask_question`, and initiate `relay_request_conflict_resolution` with token-governed human ratification.
 
 ---
 
