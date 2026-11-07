@@ -364,15 +364,18 @@ def migrate(target_pg_url: str, sqlite_db_path: str = "backend/relay.db") -> boo
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage:")
-        print("  Inspect source: python scripts/migrate_sqlite_to_postgres.py --inspect-source")
-        print("  Run migration:  python scripts/migrate_sqlite_to_postgres.py <TARGET_POSTGRES_URL>")
-        sys.exit(1)
-
-    if sys.argv[1] == "--inspect-source":
+    if len(sys.argv) > 1 and sys.argv[1] == "--inspect-source":
         inspect_source()
         sys.exit(0)
 
-    success = migrate(sys.argv[1])
+    target_url = sys.argv[1] if len(sys.argv) >= 2 else (os.getenv("NEON_DATABASE_URL") or os.getenv("DATABASE_URL"))
+    if not target_url or target_url.startswith("sqlite"):
+        print("\n[ERROR] Missing target PostgreSQL connection URL.")
+        print("The script requires a valid Neon PostgreSQL connection string (pooled URL).")
+        print("\nUsage:")
+        print("  python scripts/migrate_sqlite_to_postgres.py \"postgresql://<user>:<password>@<neon-pooled-host>/<dbname>?sslmode=require\"")
+        print("  or set NEON_DATABASE_URL / DATABASE_URL in your environment.\n")
+        sys.exit(1)
+
+    success = migrate(target_url)
     sys.exit(0 if success else 1)
