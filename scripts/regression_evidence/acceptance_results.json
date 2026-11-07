@@ -1,0 +1,42 @@
+{
+  "navigation": {
+    "/app": true,
+    "/app/archive": true,
+    "/app/map": true,
+    "/app/investigations": true,
+    "/app/responsibilities": true,
+    "/app/agents": true,
+    "/app/handovers": true,
+    "/app/settings": true,
+    "/": true,
+    "/platform": true,
+    "/how-it-works": true,
+    "active_plate_transition": true,
+    "history_back_forward": true
+  },
+  "motion": {
+    "industrial_cursor": true,
+    "animated_counters": true,
+    "command_palette": true
+  },
+  "workflows": {
+    "1_dashboard": true,
+    "2_archive": true,
+    "3_extraction_evidence": true,
+    "4_investigations": true,
+    "5_responsibilities_map": true,
+    "6_agents_pipeline": true,
+    "7_human_approval": true,
+    "8_nine_chapter_dossier": true,
+    "9_dossier_exports": true,
+    "10_11_grounded_qa": true,
+    "12_unsupported_refusal": true
+  },
+  "data_correctness": {
+    "backend_consistency": true
+  },
+  "responsive_accessibility": {
+    "mobile_drawer": true
+  },
+  "console_errors": []
+}

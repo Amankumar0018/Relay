@@ -1,0 +1,24 @@
+{
+  "json_valid": true,
+  "json_size_bytes": 271666,
+  "json_chapters_count": 9,
+  "json_title": "Executive Briefing Book: Engineering Leadership & Technical Operations Transition",
+  "md_valid": true,
+  "md_size_bytes": 35763,
+  "md_chapters_found": [
+    "Chapter 1",
+    "Chapter 2",
+    "Chapter 3",
+    "Chapter 4",
+    "Chapter 5",
+    "Chapter 6",
+    "Chapter 7",
+    "Chapter 8",
+    "Chapter 9"
+  ],
+  "md_all_9_chapters_present": true,
+  "files": [
+    "Relay-Dossier-v1-48f1efae.json",
+    "Relay-Handover-v1-48f1efae.md"
+  ]
+}
