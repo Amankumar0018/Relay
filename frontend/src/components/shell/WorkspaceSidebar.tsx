@@ -87,19 +87,31 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({ isOpen, onCl
             </button>
           </div>
 
-          <div className="mt-3 p-2.5 bg-concrete/60 border border-carbon relative overflow-hidden group">
+          <div className="mt-3 p-2.5 bg-concrete/60 border border-carbon relative overflow-hidden group space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] uppercase font-bold text-signal-orange">
-                NODE #04
+              <span className="font-mono text-[9px] uppercase font-bold text-signal-orange">
+                NODE #04 // SECURE BOUNDARY
               </span>
               <span className="w-2 h-2 bg-industrial-green border border-carbon animate-pulse" />
             </div>
-            <p className="font-display font-bold text-xs uppercase text-carbon mt-1 truncate">
-              Acme BioSystems
-            </p>
-            <p className="font-mono text-[10px] text-carbon/70 truncate">
-              CSO TRANSITION 2026
-            </p>
+            <div>
+              <p className="font-display font-bold text-xs uppercase text-carbon truncate">
+                Acme BioSystems
+              </p>
+              <p className="font-mono text-[9px] text-carbon/70 truncate">
+                AMAN KUMAR → MARCUS VANCE
+              </p>
+            </div>
+
+            {/* Active Role Indicator */}
+            <div className="pt-1 border-t border-carbon/20 flex items-center justify-between">
+              <span className="font-mono text-[9px] uppercase font-bold px-1.5 py-0.5 bg-carbon text-raw-paper">
+                AUTHORIZED REVIEWER
+              </span>
+              <span className="font-mono text-[8px] uppercase text-signal-orange font-bold">
+                SWITCH GATE ACTIVE
+              </span>
+            </div>
             {/* Subtle telemetry line */}
             <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-carbon/20 group-hover:bg-signal-orange transition-colors" />
           </div>

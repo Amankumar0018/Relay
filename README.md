@@ -2,12 +2,16 @@
 
 > **Evidence-Grounded Organizational Memory & Institutional Continuity Platform**  
 > Preserving institutional truth, detecting operational contradictions, and synthesizing verifiable leadership handovers.
+> 
+> 🏆 **Flip the Switch Hackathon** — WeMakeDevs × DevTools Academy × Switch  
+> 🎯 **Target Track**: Best Business Workflow  
+> 📅 **Submission Date**: November 7, 2026
 
-[![System Status](https://img.shields.io/badge/status-active%20%2F%20verified-success?style=for-the-badge)](https://github.com)
-[![Automated Tests](https://img.shields.io/badge/backend%20tests-229%20passed-blue?style=for-the-badge)](https://github.com)
-[![Frontend Routes](https://img.shields.io/badge/frontend%20build-17%2F17%20prerendered-blueviolet?style=for-the-badge)](https://github.com)
-[![Governance](https://img.shields.io/badge/governance-two--phase%20human%20approval-orange?style=for-the-badge)](https://github.com)
-[![License](https://img.shields.io/badge/license-MIT%20Pending-lightgrey?style=for-the-badge)](https://github.com)
+[![Hackathon Track](https://img.shields.io/badge/track-Best%20Business%20Workflow-FF6B00?style=for-the-badge)](https://github.com/Amankumar0018/Relay)
+[![System Status](https://img.shields.io/badge/status-active%20%2F%20verified-success?style=for-the-badge)](https://github.com/Amankumar0018/Relay)
+[![Automated Tests](https://img.shields.io/badge/backend%20tests-229%20passed-blue?style=for-the-badge)](https://github.com/Amankumar0018/Relay)
+[![Frontend Routes](https://img.shields.io/badge/frontend%20build-17%2F17%20prerendered-blueviolet?style=for-the-badge)](https://github.com/Amankumar0018/Relay)
+[![Governance](https://img.shields.io/badge/governance-two--phase%20human%20approval-orange?style=for-the-badge)](https://github.com/Amankumar0018/Relay)
 
 ---
 
@@ -295,6 +299,22 @@ sequenceDiagram
     Relay->>DB: Write conflict_resolution_audits (Immutable Provenance)
     Relay-->>Human: Adjudication Confirmed & Audit Sealed
 ```
+
+### The 5 Organizational Roles & Security Boundary
+
+Relay establishes clear governance boundaries between public viewers, contributing team members, AI agents, and authorized decision-makers:
+
+| Role | Scope | Permissions & Responsibilities | Institutional Actor |
+|:---|:---|:---|:---|
+| **Administrator** | System Architecture | Configuration of Docker containers, API environment policies, audit log exports, and storage engine encryption. | System Admin |
+| **Outgoing Leader** | Knowledge Deposition | Uploads departure charters, annotates tacit knowledge, transfers RACI custody of infrastructure assets. | Aman Kumar |
+| **Contributor** | Operational Ingestion | Deposits sprint roadmaps, architecture proposals, and postmortems (Elena Rostova, Dr. Thorne, Priya Sharma). | Engineering Leads |
+| **Authorized Reviewer** | Switch Human Gate | Adjudicates flagged contradictions and approves/rejects conflict resolutions using Mattermost PAT or operator secret. | Compliance Lead |
+| **Incoming Leader** | Continuity Execution | Queries citation-grounded Q&A via Switch, executes the Day 1–30 Roadmap, and exports 9-chapter dossiers. | Marcus Vance |
+
+#### Public vs. Authenticated Workspace Boundary
+- **Public Portal** (`/`, `/platform`, `/how-it-works`): Read-only architectural overview, interactive methodology demonstrations, and product documentation.
+- **Authenticated Workspace** (`/app/*`): Local Docker-contained intelligence desk protected by local network boundaries, session tokens, and cryptographic operator secrets. Unilateral resolution by AI agents is blocked at the gateway level.
 
 ---
 

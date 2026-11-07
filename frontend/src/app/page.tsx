@@ -100,12 +100,68 @@ const DEMO_RECORDS: DemoDoc[] = [
   },
 ];
 
+type ArtifactStage = "DOCUMENTS" | "FACTS" | "DECISIONS" | "RESPONSIBILITIES" | "CONTINUITY";
+
+interface StageInfo {
+  id: ArtifactStage;
+  label: string;
+  tagline: string;
+  count: string;
+  example: string;
+  evidence: string;
+}
+
+const STAGE_DETAILS: Record<ArtifactStage, StageInfo> = {
+  DOCUMENTS: {
+    id: "DOCUMENTS",
+    label: "01 // INGESTION",
+    tagline: "Cryptographic Archive Deposition",
+    count: "10 DEPOSITED RECORDS",
+    example: "Project Odyssey Launch Plan.txt, Aegis Transition Briefing.txt, Departure Charters",
+    evidence: "SHA-256 integrity anchors • Local-first storage • Zero cloud retention",
+  },
+  FACTS: {
+    id: "FACTS",
+    label: "02 // TRIPLES",
+    tagline: "Granular Knowledge Extraction",
+    count: "32 VERIFIED TRIPLES",
+    example: "Entity (Marcus Vance) → Relation (OWNS) → Entity (Project Odyssey)",
+    evidence: "Every fact anchored to character offsets [char_start, char_end] in primary source",
+  },
+  DECISIONS: {
+    id: "DECISIONS",
+    label: "03 // RATIONALES",
+    tagline: "Superseding & Amendment Tracking",
+    count: "6 ADJUDICATED CHOICES",
+    example: "Beta Launch postponed from Dec 15, 2026 to Feb 1, 2027 per infrastructure memo",
+    evidence: "Temporal ordering prevents successors from acting on superseded roadmaps",
+  },
+  RESPONSIBILITIES: {
+    id: "RESPONSIBILITIES",
+    label: "04 // OWNERSHIP",
+    tagline: "RACI & Infrastructure Custody",
+    count: "14 ACTIVE RESPONSIBILITIES",
+    example: "Elena Rostova (Odyssey Lead), Dr. Aris Thorne (Aegis Lead), Kubernetes Alpha-9",
+    evidence: "Unassigned assets instantly flagged as critical institutional liabilities",
+  },
+  CONTINUITY: {
+    id: "CONTINUITY",
+    label: "05 // HANDOVER",
+    tagline: "9-Chapter Boardroom Dossier",
+    count: "100% COMPLETE DOSSIER",
+    example: "Executive Briefing, Day 1-30 Roadmap, Ratified Decisions, Full Citations",
+    evidence: "Grounded Q&A engine with strict refusal on unsupported institutional queries",
+  },
+};
+
 export default function HomePage() {
   const [selectedRecordId, setSelectedRecordId] = useState<string>("rec-01");
   const [clarificationResolved, setClarificationResolved] = useState<boolean>(false);
   const [dossierGenerated, setDossierGenerated] = useState<boolean>(false);
+  const [activeStage, setActiveStage] = useState<ArtifactStage>("DOCUMENTS");
 
   const activeDoc = DEMO_RECORDS.find((r) => r.id === selectedRecordId) || DEMO_RECORDS[0];
+  const stageInfo = STAGE_DETAILS[activeStage];
 
   return (
     <div className="min-h-screen bg-raw-paper text-carbon flex flex-col selection:bg-signal-orange selection:text-raw-paper relative">
@@ -113,11 +169,11 @@ export default function HomePage() {
       <PublicNav />
 
       <main className="flex-1">
-        {/* SECTION 01: HERO BANNER & CONTINUITY STATEMENT */}
+        {/* HERO BANNER & CONTINUITY STATEMENT */}
         <section className="border-b-2 border-carbon">
           <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[520px]">
-            {/* Left Column: Bold Asymmetric Headline & Editorial Copy */}
-            <div className="lg:col-span-8 p-6 sm:p-10 lg:p-14 flex flex-col justify-between border-b-2 lg:border-b-0 lg:border-r-2 border-carbon bg-raw-paper">
+            {/* Left Column: Asymmetric Brutalist Headline & Editorial Copy */}
+            <div className="lg:col-span-7 p-6 sm:p-10 lg:p-14 flex flex-col justify-between border-b-2 lg:border-b-0 lg:border-r-2 border-carbon bg-raw-paper">
               <ScrollReveal variant="industrial">
                 <div className="space-y-6">
                   <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-carbon text-raw-paper text-[11px] font-mono uppercase tracking-widest border border-carbon">
@@ -125,77 +181,110 @@ export default function HomePage() {
                     <span>ORGANIZATIONAL CONTINUITY ENGINE</span>
                   </div>
 
-                  <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-6xl uppercase tracking-tighter text-carbon leading-[0.98]">
-                    Every
+                  <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-6xl uppercase tracking-tighter text-carbon leading-[0.96]">
+                    THE NEXT LEADER
                     <br />
-                    organization
+                    SHOULD NEVER START
                     <br />
-                    <span className="text-signal-orange">has a memory.</span>
+                    <span className="text-signal-orange">FROM ZERO.</span>
                   </h1>
 
                   <p className="max-w-xl text-sm sm:text-base text-carbon/80 font-sans leading-relaxed">
-                    Relay preserves the decisions, obligations, and institutional knowledge that keep organizations moving through change.
+                    Relay reconstructs organizational knowledge, decisions, responsibilities, and unresolved risks into a continuous institutional memory.
                   </p>
                 </div>
               </ScrollReveal>
 
-              {/* Action row */}
+              {/* Action row with explicit CTAs */}
               <ScrollReveal variant="editorial" delay={0.1}>
                 <div className="pt-8 border-t-2 border-carbon/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <Link href="/app">
-                    <Button variant="signal" size="md" magnetic={true} data-cursor="WORKSPACE" className="px-6 py-2.5 text-sm">
-                      Launch Relay Workspace
+                  <Link href="/platform">
+                    <Button variant="signal" size="md" magnetic={true} data-cursor="PLATFORM" className="px-6 py-2.5 text-sm">
+                      Explore the Platform
                       <IconArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                   </Link>
-                  <Link href="/how-it-works">
-                    <Button variant="outline" size="md" magnetic={true} className="px-6 py-2.5 text-sm">
-                      The 5-Phase Methodology
+
+                  <Link href="/app">
+                    <Button variant="outline" size="md" magnetic={true} data-cursor="WORKSPACE" className="px-6 py-2.5 text-sm">
+                      Enter Workspace
                     </Button>
                   </Link>
                 </div>
               </ScrollReveal>
             </div>
 
-            {/* Right Column: Industrial Telemetry & Transition Architecture */}
-            <div className="lg:col-span-4 bg-carbon text-raw-paper p-6 sm:p-8 flex flex-col justify-between">
+            {/* Right Column: Architectural Knowledge Artifact */}
+            <div className="lg:col-span-5 bg-carbon text-raw-paper p-6 sm:p-8 flex flex-col justify-between">
               <div className="space-y-5">
                 <div className="flex items-center justify-between border-b border-raw-paper/20 pb-3">
                   <span className="font-mono text-[11px] uppercase tracking-widest text-raw-paper/70 font-bold">
-                    TRANSITION TELEMETRY
+                    ARCHITECTURAL CONTINUITY ARTIFACT
                   </span>
                   <span className="font-mono text-xs text-signal-orange font-bold uppercase">
-                    ACTIVE NODE #04
+                    LIVE RECONSTRUCTION
                   </span>
                 </div>
 
-                {/* Industrial Flow Telemetry */}
-                <div className="p-4 border-2 border-raw-paper/20 bg-carbon-surface space-y-4">
-                  <div className="flex items-center justify-between font-mono text-[11px]">
-                    <span className="text-signal-orange font-bold">CASE: ACME BIOSYSTEMS</span>
-                    <span className="text-raw-paper/70">DR. VANCE → DR. THORNE</span>
-                  </div>
-
-                  <div className="space-y-2 font-mono text-xs">
-                    <div className="p-2.5 border border-raw-paper/20 flex items-center justify-between bg-carbon">
-                      <span className="text-raw-paper/90 text-[11px]">01. DEPOSITED RECORDS</span>
-                      <span className="text-signal-orange font-bold">[10 DOCS]</span>
-                    </div>
-                    <div className="p-2.5 border border-raw-paper/20 flex items-center justify-between bg-carbon">
-                      <span className="text-raw-paper/90 text-[11px]">02. EXTRACTED TRIPLES</span>
-                      <span className="text-industrial-green-light font-bold">[32 FACTS]</span>
-                    </div>
-                    <div className="p-2.5 border border-signal-orange flex items-center justify-between bg-signal-orange/10 text-signal-orange font-bold">
-                      <span className="text-[11px]">03. CRITICAL ANOMALIES</span>
-                      <span>[6 FLAGGED]</span>
-                    </div>
-                    <div className="p-2.5 border border-raw-paper/20 flex items-center justify-between bg-carbon">
-                      <span className="text-raw-paper/90 text-[11px]">04. 9-CHAPTER DOSSIER</span>
-                      <span className="text-raw-paper font-bold">READY</span>
-                    </div>
+                {/* Pipeline Progression Navigation */}
+                <div className="space-y-2">
+                  <span className="font-mono text-[10px] text-raw-paper/60 uppercase tracking-wider block">
+                    INTERACTIVE PIPELINE TRACE [SELECT STAGE]:
+                  </span>
+                  <div className="grid grid-cols-5 gap-1 font-mono text-[10px] font-bold">
+                    {(["DOCUMENTS", "FACTS", "DECISIONS", "RESPONSIBILITIES", "CONTINUITY"] as ArtifactStage[]).map((stage, i) => (
+                      <button
+                        key={stage}
+                        onClick={() => setActiveStage(stage)}
+                        className={`p-1.5 text-center border uppercase transition-all ${
+                          activeStage === stage
+                            ? "bg-signal-orange text-raw-paper border-signal-orange shadow-brutal"
+                            : "bg-carbon-surface text-raw-paper/70 border-raw-paper/20 hover:border-raw-paper/60 hover:text-raw-paper"
+                        }`}
+                      >
+                        <span className="block text-[8px] opacity-75">{`0${i + 1}`}</span>
+                        <span className="truncate block">{stage.slice(0, 4)}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
+                {/* Stage Inspection Box */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeStage}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.15 }}
+                    className="p-4 border-2 border-raw-paper/20 bg-carbon-surface space-y-3"
+                  >
+                    <div className="flex items-center justify-between border-b border-raw-paper/10 pb-2">
+                      <span className="font-mono text-[11px] text-signal-orange font-bold">
+                        {stageInfo.label}
+                      </span>
+                      <span className="font-mono text-xs font-bold text-raw-paper px-2 py-0.5 bg-carbon border border-raw-paper/20">
+                        {stageInfo.count}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="font-display font-bold text-sm uppercase text-raw-paper">
+                        {stageInfo.tagline}
+                      </h4>
+                      <p className="font-mono text-xs text-raw-paper/80 mt-1 leading-relaxed">
+                        {stageInfo.example}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-raw-paper/10 font-mono text-[10px] text-industrial-green-light flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 bg-industrial-green shrink-0" />
+                      <span>{stageInfo.evidence}</span>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* System Specs Strip */}
                 <div className="space-y-1.5 font-mono text-xs text-raw-paper/80">
                   <p>• Local-first persistent SQLite engine (WAL)</p>
                   <p>• Multi-agent cross-examination with human Switch</p>
@@ -211,71 +300,71 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* SECTION 02: THE INSTITUTIONAL FRACTURE */}
+        {/* SECTION 1: ORGANIZATIONS FORGET */}
         <section className="border-b-2 border-carbon bg-raw-paper-light py-16 px-4 sm:px-8 lg:px-12">
           <ScrollReveal variant="industrial">
             <div className="max-w-6xl mx-auto space-y-8">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b-2 border-carbon pb-6">
                 <div>
                   <span className="font-mono text-xs uppercase tracking-widest text-signal-orange font-bold block mb-1">
-                    THE INSTITUTIONAL PROBLEM
+                    SECTION 01 // THE INSTITUTIONAL VULNERABILITY
                   </span>
                   <h2 className="font-display font-black text-3xl sm:text-4xl uppercase tracking-tight text-carbon">
-                    How knowledge evaporates
+                    Organizations forget.
                   </h2>
                 </div>
                 <p className="max-w-md text-xs sm:text-sm text-carbon/80 font-sans leading-relaxed">
-                  When key leadership departs, corporate memory fragments across hidden silos, leaving successors to navigate invisible liabilities.
+                  When key leaders depart, corporate memory fragments across buried files and unrecorded conversations. Successors inherit blind spots, hidden liabilities, and lost rationales.
                 </p>
               </div>
 
-              {/* 4 Spacious Industrial Problem Cards */}
+              {/* 4 Brutalist Problem Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-5 border-2 border-carbon bg-raw-paper space-y-2.5 shadow-brutal hover:-translate-y-0.5 transition-transform">
                   <span className="font-mono text-[11px] font-bold text-signal-orange uppercase">
-                    01 // RECORDS
+                    01 // BURIED RECORDS
                   </span>
                   <h3 className="font-display font-black text-base uppercase text-carbon">
                     Buried In Binders
                   </h3>
                   <p className="text-xs text-carbon/80 leading-relaxed font-sans">
-                    Vital commitments hide in hundred-page contract amendments that no one reads until a breach occurs.
+                    Vital commitments hide in hundred-page contract amendments and chat channels that no one reads until a costly breach occurs.
                   </p>
                 </div>
 
                 <div className="p-5 border-2 border-carbon bg-raw-paper space-y-2.5 shadow-brutal hover:-translate-y-0.5 transition-transform">
                   <span className="font-mono text-[11px] font-bold text-signal-orange uppercase">
-                    02 // DECISIONS
+                    02 // LOST RATIONALES
                   </span>
                   <h3 className="font-display font-black text-base uppercase text-carbon">
-                    Lost Rationales
+                    Vanishing Context
                   </h3>
                   <p className="text-xs text-carbon/80 leading-relaxed font-sans">
-                    Why an architecture was chosen or a vendor rejected is never documented, causing successors to repeat costly missteps.
+                    Why an architecture was chosen or a vendor rejected is never formally captured, causing successors to repeat costly missteps.
                   </p>
                 </div>
 
                 <div className="p-5 border-2 border-carbon bg-raw-paper space-y-2.5 shadow-brutal hover:-translate-y-0.5 transition-transform">
                   <span className="font-mono text-[11px] font-bold text-signal-orange uppercase">
-                    03 // OBLIGATIONS
+                    03 // SILENT DEADLINES
                   </span>
                   <h3 className="font-display font-black text-base uppercase text-carbon">
-                    Silent Deadlines
+                    Invisible Clauses
                   </h3>
                   <p className="text-xs text-carbon/80 leading-relaxed font-sans">
-                    Auto-renewing six-figure SaaS and lab contracts trigger unprompted with no assigned successor aware.
+                    Auto-renewing six-figure SaaS agreements and vendor contracts trigger unprompted with no assigned successor aware of cancellation windows.
                   </p>
                 </div>
 
                 <div className="p-5 border-2 border-carbon bg-signal-orange text-raw-paper space-y-2.5 shadow-brutal hover:-translate-y-0.5 transition-transform">
                   <span className="font-mono text-[11px] font-bold text-carbon uppercase">
-                    04 // GAPS
+                    04 // ORPHANED ASSETS
                   </span>
                   <h3 className="font-display font-black text-base uppercase text-raw-paper">
                     Split Authority
                   </h3>
                   <p className="text-xs text-raw-paper/90 leading-relaxed font-sans">
-                    Contradictory filings designate two different decision-makers, freezing operational execution and compliance.
+                    Critical infrastructure like Kubernetes cluster Alpha-9 is left without an assigned owner or steward, creating immediate operational vulnerabilities.
                   </p>
                 </div>
               </div>
@@ -283,17 +372,20 @@ export default function HomePage() {
           </ScrollReveal>
         </section>
 
-        {/* SECTION 03: THE CONTINUITY PIPELINE */}
+        {/* SECTION 2: RELAY CONNECTS THE RECORD */}
         <section className="border-b-2 border-carbon py-16 px-4 sm:px-8 lg:px-12 bg-raw-paper">
           <ScrollReveal variant="editorial">
             <div className="max-w-6xl mx-auto space-y-8">
               <div className="space-y-2">
                 <span className="font-mono text-xs uppercase tracking-widest text-signal-orange font-bold block">
-                  SYSTEM METHODOLOGY
+                  SECTION 02 // INGESTION &amp; EXTRACTION ENGINE
                 </span>
                 <h2 className="font-display font-black text-3xl sm:text-4xl uppercase tracking-tight text-carbon">
-                  Records → Knowledge → Adjudication → Handover
+                  Relay connects the record.
                 </h2>
+                <p className="text-xs sm:text-sm text-carbon/80 font-sans max-w-xl leading-relaxed">
+                  Relay ingests raw institutional archives, verifies cryptographic hashes, and maps people, assets, decisions, and dates into an interconnected topological graph.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-5 gap-0 border-2 border-carbon divide-y md:divide-y-0 md:divide-x-2 divide-carbon bg-raw-paper-light shadow-brutal">
@@ -320,10 +412,10 @@ export default function HomePage() {
                 <div className="p-4 space-y-2 bg-concrete/40">
                   <span className="font-mono text-[11px] text-signal-orange font-bold block">STAGE 03</span>
                   <h3 className="font-display font-bold text-sm uppercase text-carbon">
-                    Detect Gaps
+                    Cross-Examine
                   </h3>
                   <p className="text-xs text-carbon/80 leading-relaxed font-sans">
-                    Cross-examines documents to uncover contradictions and missing schedules.
+                    Detects contradictory dates, superseded roadmaps, and unassigned infrastructure.
                   </p>
                 </div>
 
@@ -333,14 +425,14 @@ export default function HomePage() {
                     Switch Gate
                   </h3>
                   <p className="text-xs text-carbon/80 leading-relaxed font-sans">
-                    Humans review, approve, or clarify flagged anomalies before decisions lock.
+                    Authenticated humans review, approve, or clarify flagged anomalies before decisions lock.
                   </p>
                 </div>
 
                 <div className="p-4 space-y-2 bg-carbon text-raw-paper">
                   <span className="font-mono text-[11px] text-signal-orange font-bold block">STAGE 05</span>
                   <h3 className="font-display font-bold text-sm uppercase text-raw-paper">
-                    Dossier
+                    Continuity
                   </h3>
                   <p className="text-xs text-raw-paper/80 leading-relaxed font-sans">
                     Synthesizes executive briefing, 30-day roadmap, and line-item responsibilities.
@@ -351,20 +443,20 @@ export default function HomePage() {
           </ScrollReveal>
         </section>
 
-        {/* SECTION 04: MANDATORY FUNCTIONAL PRODUCT DEMONSTRATION */}
+        {/* SECTION 3: NOT JUST WHAT HAPPENED. WHAT NO LONGER ADDS UP */}
         <section className="border-b-2 border-carbon py-16 px-4 sm:px-8 lg:px-12 bg-concrete/30">
           <div className="max-w-6xl mx-auto space-y-8">
             <ScrollReveal variant="industrial">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                   <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-signal-orange text-raw-paper font-mono text-[10px] uppercase font-bold border border-carbon">
-                    INTERACTIVE DEMONSTRATION
+                    SECTION 03 // ADVERSARIAL DISCOVERY
                   </div>
                   <h2 className="font-display font-black text-2xl sm:text-4xl uppercase tracking-tight text-carbon mt-2">
-                    Transition Inspector Desk
+                    Not just what happened. What no longer adds up.
                   </h2>
                   <p className="font-mono text-xs text-carbon/70 uppercase mt-1">
-                    CASE: ACME BIOSYSTEMS // DR. ELEANOR VANCE (CSO TRANSITION)
+                    RELAY CROSS-EXAMINES DOCUMENTS TO EXPOSE CONFLICTS, GAPS, AND UNASSIGNED LIABILITIES
                   </p>
                 </div>
 
@@ -559,106 +651,20 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* SECTION 05: AGENT ARCHITECTURE */}
-        <section className="border-b-2 border-carbon py-16 px-4 sm:px-8 lg:px-12 bg-raw-paper">
-          <ScrollReveal variant="editorial">
-            <div className="max-w-6xl mx-auto space-y-8">
-              <div className="space-y-2 border-b-2 border-carbon pb-6">
-                <span className="font-mono text-xs uppercase tracking-widest text-signal-orange font-bold block">
-                  AGENT ARCHITECTURE
-                </span>
-                <h2 className="font-display font-black text-3xl sm:text-4xl uppercase tracking-tight text-carbon">
-                  Four Specialized Collaborative Agents
-                </h2>
-                <p className="text-xs sm:text-sm text-carbon/80 font-sans max-w-xl leading-relaxed">
-                  Relay isolates analytical roles into four purpose-built agent stages, governed by the Switch human verification protocol.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-5 border-2 border-carbon bg-raw-paper-light space-y-2.5 shadow-brutal hover:-translate-y-0.5 transition-transform">
-                  <span className="font-mono text-[10px] font-bold px-2 py-0.5 bg-carbon text-raw-paper inline-block">
-                    AGENT 01
-                  </span>
-                  <h3 className="font-display font-black text-sm uppercase text-carbon">
-                    Knowledge Extractor
-                  </h3>
-                  <p className="text-xs text-carbon/80 font-sans leading-relaxed">
-                    Ingests multi-page PDFs, charters, and agreements into structured entity triples, milestone dates, and monetary thresholds.
-                  </p>
-                </div>
-
-                <div className="p-5 border-2 border-carbon bg-raw-paper-light space-y-2.5 shadow-brutal hover:-translate-y-0.5 transition-transform">
-                  <span className="font-mono text-[10px] font-bold px-2 py-0.5 bg-signal-orange text-raw-paper inline-block">
-                    AGENT 02
-                  </span>
-                  <h3 className="font-display font-black text-sm uppercase text-carbon">
-                    Gap Detective
-                  </h3>
-                  <p className="text-xs text-carbon/80 font-sans leading-relaxed">
-                    Adversarially cross-examines documents to uncover split authority mandates, missing exhibits, and unassigned renewal clauses.
-                  </p>
-                </div>
-
-                <div className="p-5 border-2 border-carbon bg-raw-paper-light space-y-2.5 shadow-brutal hover:-translate-y-0.5 transition-transform">
-                  <span className="font-mono text-[10px] font-bold px-2 py-0.5 bg-carbon text-raw-paper inline-block">
-                    AGENT 03
-                  </span>
-                  <h3 className="font-display font-black text-sm uppercase text-carbon">
-                    Continuity Analyst
-                  </h3>
-                  <p className="text-xs text-carbon/80 font-sans leading-relaxed">
-                    Maps directed acyclic dependency trees, linking predecessor tasks, legal filings, and contract deadlines to owners.
-                  </p>
-                </div>
-
-                <div className="p-5 border-2 border-carbon bg-raw-paper-light space-y-2.5 shadow-brutal hover:-translate-y-0.5 transition-transform">
-                  <span className="font-mono text-[10px] font-bold px-2 py-0.5 bg-industrial-green text-raw-paper inline-block">
-                    AGENT 04
-                  </span>
-                  <h3 className="font-display font-black text-sm uppercase text-carbon">
-                    Handover Architect
-                  </h3>
-                  <p className="text-xs text-carbon/80 font-sans leading-relaxed">
-                    Compiles verified evidence, approved resolutions, and first-month milestones into a boardroom-ready executive dossier.
-                  </p>
-                </div>
-              </div>
-
-              {/* Switch Human Verification Protocol Notice */}
-              <div className="p-4 sm:p-5 border-2 border-carbon bg-carbon text-raw-paper flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-brutal">
-                <div className="flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 bg-signal-orange shrink-0" />
-                  <div className="space-y-0.5">
-                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-signal-orange block">
-                      THE SWITCH VERIFICATION PROTOCOL:
-                    </span>
-                    <span className="text-raw-paper/90 font-sans text-xs leading-relaxed">
-                      Agents never publish conclusions or close investigations without explicit human review.
-                    </span>
-                  </div>
-                </div>
-                <Link href="/app/agents">
-                  <Button variant="signal" size="sm" magnetic={true} className="shrink-0 text-xs">
-                    View Agent Pipeline →
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </ScrollReveal>
-        </section>
-
-        {/* SECTION 06: HANDOVER DOSSIER SHOWCASE */}
+        {/* SECTION 4: CONTINUITY IS THE DELIVERABLE */}
         <section className="border-b-2 border-carbon py-16 px-4 sm:px-8 lg:px-12 bg-raw-paper-light">
           <ScrollReveal variant="industrial">
             <div className="max-w-6xl mx-auto space-y-8">
               <div className="space-y-2">
                 <span className="font-mono text-xs uppercase tracking-widest text-signal-orange font-bold block">
-                  SYSTEM DELIVERABLE
+                  SECTION 04 // THE CONTINUITY DELIVERABLE
                 </span>
                 <h2 className="font-display font-black text-3xl sm:text-4xl uppercase tracking-tight text-carbon">
-                  Evidence-Backed Handover Dossiers
+                  Continuity is the deliverable.
                 </h2>
+                <p className="text-xs sm:text-sm text-carbon/80 font-sans max-w-xl leading-relaxed">
+                  Relay turns months of fragmented records into an authoritative Nine-Chapter Handover Dossier with grounded citations, Day-1 roadmaps, and honest insufficient-evidence refusals.
+                </p>
               </div>
 
               <div className="border-2 border-carbon bg-raw-paper p-6 sm:p-8 space-y-6 shadow-brutal">
@@ -720,15 +726,15 @@ export default function HomePage() {
           </ScrollReveal>
         </section>
 
-        {/* SECTION 07: CONVERSION CTA */}
+        {/* SECTION 5: LEAVE KNOWLEDGE, NOT JUST DOCUMENTS */}
         <section className="py-16 px-4 sm:px-8 lg:px-12 bg-carbon text-raw-paper text-center">
           <ScrollReveal variant="editorial">
             <div className="max-w-3xl mx-auto space-y-6">
               <span className="font-mono text-[10px] uppercase tracking-widest text-signal-orange font-bold block">
-                PRODUCTION WORKSPACE ACTIVE
+                SECTION 05 // SYSTEM COMPLETION &amp; ONBOARDING
               </span>
               <h2 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tighter text-raw-paper leading-tight">
-                Protect your organization&rsquo;s next transition.
+                Leave knowledge, not just documents.
               </h2>
               <p className="max-w-xl mx-auto text-xs sm:text-sm text-raw-paper/80 font-sans leading-relaxed">
                 Deposit your institutional records, cross-examine hidden liabilities, and synthesize verifiable handovers that survive any leadership departure.
