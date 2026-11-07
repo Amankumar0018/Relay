@@ -1,0 +1,161 @@
+1
+00:00:00,800 --> 00:00:04,500
+When technical leaders depart,
+institutional memory evaporates.
+
+2
+00:00:04,700 --> 00:00:09,000
+Decisions lose their rationale,
+conflicting dates persist uncorrected,
+
+3
+00:00:09,200 --> 00:00:13,200
+and mission-critical cloud infrastructure
+sits silently orphaned.
+
+4
+00:00:13,500 --> 00:00:19,500
+We built Relay to ensure that when leadership
+changes, institutional knowledge survives intact.
+
+5
+00:00:22,500 --> 00:00:26,500
+Relay operates as an
+evidence-grounded continuity desk.
+
+6
+00:00:26,700 --> 00:00:31,000
+Outgoing leaders deposit operational memos,
+charters, and roadmaps.
+
+7
+00:00:31,200 --> 00:00:36,000
+Rather than generating loose AI summaries,
+Relay's extraction pipeline
+
+8
+00:00:36,200 --> 00:00:42,500
+anchors every single assertion to character-level
+evidence coordinates in primary text.
+
+9
+00:00:44,500 --> 00:00:49,000
+Instead of smoothing over differences,
+Relay cross-examines records
+
+10
+00:00:49,200 --> 00:00:53,500
+using property-aware semantic matching
+across institutional facts.
+
+11
+00:00:53,800 --> 00:00:57,800
+Here, Document A specifies November 15
+for product launch,
+
+12
+00:00:58,000 --> 00:01:02,500
+while an amendment memo references
+December 20 following stress tests.
+
+13
+00:01:02,700 --> 00:01:06,500
+Relay flags a Direct Contradiction and surfaces
+an unassigned Kubernetes cluster,
+
+14
+00:01:06,700 --> 00:01:10,000
+catching an operational liability
+before an outage occurs.
+
+15
+00:01:11,500 --> 00:01:16,000
+This is where Switch and the Model Context
+Protocol transform the workflow.
+
+16
+00:01:16,200 --> 00:01:21,000
+When the incoming leader asks about
+the timeline in Switch,
+
+17
+00:01:21,200 --> 00:01:25,500
+the OpenCode agent executes
+Relay's registered FastMCP tools.
+
+18
+00:01:25,700 --> 00:01:30,500
+It audits open discrepancies, retrieves
+the primary amendment evidence,
+
+19
+00:01:30,700 --> 00:01:35,500
+and accurately explains the conflict
+rather than guessing an answer.
+
+20
+00:01:35,700 --> 00:01:39,500
+The agent then proposes escalating the issue
+for formal human review.
+
+21
+00:01:40,500 --> 00:01:44,500
+Here is Relay's defining governance doctrine:
+
+22
+00:01:44,700 --> 00:01:49,500
+An AI agent may discover discrepancies
+and propose adjudications,
+
+23
+00:01:49,700 --> 00:01:54,500
+but it must never possess authority
+to unilaterally decide corporate truth.
+
+24
+00:01:54,700 --> 00:01:59,500
+When human review is requested, Relay generates
+a 32-byte single-use cryptographic token.
+
+25
+00:01:59,700 --> 00:02:05,000
+Ratification strictly requires an authenticated
+human reviewer verified through Mattermost.
+
+26
+00:02:06,500 --> 00:02:11,000
+For the incoming leader, Relay compiles weeks
+of manual archaeology
+
+27
+00:02:11,200 --> 00:02:16,000
+into an audited 9-Chapter Handover Dossier
+and a chronological Day 1 to 30 Roadmap.
+
+28
+00:02:16,200 --> 00:02:20,500
+The interactive Continuity Radar visually maps
+every relationship across people,
+
+29
+00:02:20,700 --> 00:02:26,500
+projects, and critical infrastructure,
+turning fragmented records into an operational compass.
+
+30
+00:02:29,500 --> 00:02:34,000
+When evidence exists, Relay anchors answers
+to exact source citations.
+
+31
+00:02:34,200 --> 00:02:38,000
+When records are silent, it refuses to guess.
+
+32
+00:02:38,200 --> 00:02:42,500
+Backed by 229 verified automated tests,
+
+33
+00:02:42,700 --> 00:02:48,000
+Relay ensures the next leader
+never starts from zero.

@@ -31,28 +31,54 @@
 
 ---
 
+## 🎬 Product Demo Video
+
+Watch the complete, evidence-grounded walkthrough of Relay demonstrating institutional document ingestion, proactive contradiction detection, Switch + FastMCP agent integration, cryptographic human approval governance, and executive handover synthesis:
+
+[![Relay Product Demo Walkthrough](docs/demo-video/frames/scene_01_hook.png)](docs/demo-video/relay-demo.mp4)
+
+> 📹 **[Click here to watch / download the full 1080p demo video (`docs/demo-video/relay-demo.mp4`)](docs/demo-video/relay-demo.mp4)**  
+> ⏱️ **Duration**: 2 minutes 50 seconds (1080p @ 30 FPS, H.264/AAC, 9.63 MB)  
+> 📄 **Captions**: Synchronized burned-in subtitles and standalone [English SRT](docs/demo-video/relay-demo.en.srt)  
+> 📖 **Production Dossier**: Complete storyboard and voiceover script in [`docs/demo-video/README.md`](docs/demo-video/README.md)
+
+### Walkthrough Chapters & Key Highlights
+
+| Timestamp | Chapter | Key System Capability Demonstrated |
+| :---: | :--- | :--- |
+| **00:00** | **The Problem** | Structural amnesia and operational knowledge loss during executive leadership turnover |
+| **00:22** | **The Solution** | Cryptographic document ingestion with character-level evidence coordinates (`char_start`, `char_end`) |
+| **00:44** | **The Engine** | Proactive detection of contradictions (Project Odyssey Nov 15 vs Dec 20) and unassigned Kubernetes cluster Alpha-9 |
+| **01:11** | **Switch & FastMCP** | OpenCode agent executing registered Relay FastMCP tools to inspect evidence and explain discrepancies without guessing |
+| **01:40** | **Governance Desk** | Two-phase human review requiring a single-use 32-byte cryptographic token and authenticated Mattermost reviewer |
+| **02:06** | **Executive Artifacts** | Automatic compilation of an audited 9-Chapter Briefing Book and interactive Continuity Topology Radar |
+| **02:29** | **Grounded Trust** | Honest refusal on insufficient evidence, 229 verified automated tests, and open-source project links |
+
+---
+
 ## Table of Contents
 
-1. [Project Introduction](#1-project-introduction)
-2. [Problem Statement](#2-problem-statement)
-3. [Solution Overview](#3-solution-overview)
-4. [Key Features](#4-key-features)
-5. [System Architecture](#5-system-architecture)
-6. [Complete System Workflow](#6-complete-system-workflow)
-7. [Conflict Detection Lifecycle](#7-conflict-detection-lifecycle)
-8. [Human Approval & Security Architecture](#8-human-approval--security-architecture)
-9. [Handover Dossier Structure](#9-handover-dossier-structure)
-10. [Technology Stack](#10-technology-stack)
-11. [Repository Structure](#11-repository-structure)
-12. [Installation & Local Setup](#12-installation--local-setup)
-13. [Environment Variables](#13-environment-variables)
-14. [API & FastMCP Documentation](#14-api--fastmcp-documentation)
-15. [Testing & Quality Assurance](#15-testing--quality-assurance)
-16. [Screenshots & Product Walkthrough](#16-screenshots--product-walkthrough)
-17. [Security & Data Integrity](#17-security--data-integrity)
-18. [Limitations & Future Roadmap](#18-limitations--future-roadmap)
-19. [Contribution & License](#19-contribution--license)
-20. [Closing Summary](#20-closing-summary)
+1. [Product Demo Video](#-product-demo-video)
+2. [Project Introduction](#1-project-introduction)
+3. [Problem Statement](#2-problem-statement)
+4. [Solution Overview](#3-solution-overview)
+5. [Key Features](#4-key-features)
+6. [System Architecture](#5-system-architecture)
+7. [Complete System Workflow](#6-complete-system-workflow)
+8. [Conflict Detection Lifecycle](#7-conflict-detection-lifecycle)
+9. [Human Approval & Security Architecture](#8-human-approval--security-architecture)
+10. [Handover Dossier Structure](#9-handover-dossier-structure)
+11. [Technology Stack](#10-technology-stack)
+12. [Repository Structure](#11-repository-structure)
+13. [Installation & Local Setup](#12-installation--local-setup)
+14. [Environment Variables](#13-environment-variables)
+15. [API & FastMCP Documentation](#14-api--fastmcp-documentation)
+16. [Testing & Quality Assurance](#15-testing--quality-assurance)
+17. [Screenshots & Product Walkthrough](#16-screenshots--product-walkthrough)
+18. [Security & Data Integrity](#17-security--data-integrity)
+19. [Limitations & Future Roadmap](#18-limitations--future-roadmap)
+20. [Contribution & License](#19-contribution--license)
+21. [Closing Summary](#20-closing-summary)
 
 ---
 
@@ -463,6 +489,13 @@ Relay/
 │           └── api.ts               # Typed frontend HTTP client
 │
 ├── docs/
+│   ├── demo-video/                  # 1080p hackathon demo video, subtitles & dossier
+│   │   ├── relay-demo.mp4           # Master 1080p demonstration video (2m 50s)
+│   │   ├── relay-demo.en.srt        # Synchronized English captions
+│   │   └── README.md                # Video storyboard, voiceover script, & QA specs
+│   ├── blog/                        # Competition-quality technical build blog
+│   │   ├── relay-technical-build-story.md # DEV Community build story
+│   │   └── README.md                # Blog publishing guide & asset verification
 │   ├── handover-dossier-v1.json     # Real exported dossier in JSON format
 │   ├── handover-dossier-v1.md       # Real exported dossier in Markdown format
 │   └── screenshots/                 # Organized screenshot gallery (28 images)
