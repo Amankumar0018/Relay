@@ -3,6 +3,7 @@ from datetime import datetime, timezone, timedelta
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.document import Document
 from app.models.knowledge import (
     DocumentSegment,
@@ -285,9 +286,21 @@ def test_resolve_conflict_endpoint(client: TestClient, db_session: Session):
     conflicts = OrganizationalIntelligenceService.run_analysis(db_session)
     target = conflicts[0]
 
-    # Resolve via API
+    # Unauthenticated PATCH must fail with 401 Unauthorized
+    res_unauth = client.patch(
+        f"/api/v1/intelligence/conflicts/{target.id}",
+        json={
+            "status": "resolved",
+            "resolution_notes": "Clarified with General Counsel; co-signatures executed on FDA 1572.",
+            "resolved_by": "auditor_smith",
+        },
+    )
+    assert res_unauth.status_code == 401
+
+    # Authenticated resolution with operator secret succeeds
     res = client.patch(
         f"/api/v1/intelligence/conflicts/{target.id}",
+        headers={"X-Operator-Secret": settings.SWITCH_OPERATOR_SECRET},
         json={
             "status": "resolved",
             "resolution_notes": "Clarified with General Counsel; co-signatures executed on FDA 1572.",
@@ -351,7 +364,7 @@ def test_handover_dossier_generation_and_retrieval(client: TestClient, db_sessio
     assert dossier["incoming_leader"]["canonical_name"] == "marcus thorne"
 
     content = dossier["content"]
-    assert len(content["chapters"]) == 5
+    assert len(content["chapters"]) == 9
     assert "Day 1-7" in content["recommended_day_1_to_30_actions"][0]
 
     # Verify chapters have facts and citations
@@ -486,10 +499,11 @@ def test_dossier_chapter5_evidence_traceability(client: TestClient, db_session: 
     assert res.status_code == 201
     data = res.json()
 
-    ch5 = next(c for c in data["content"]["chapters"] if c["chapter_id"] == "ch5")
-    assert len(ch5["facts"]) >= 1
-    assert len(ch5["citations"]) >= 1
-    for cit in ch5["citations"]:
+    # In the 9-chapter architecture, Discrepancies & Gaps is Chapter 6
+    ch_discrepancies = next(c for c in data["content"]["chapters"] if c["chapter_id"] == "ch6" or "Discrepanc" in c["title"])
+    assert len(ch_discrepancies["facts"]) >= 1
+    assert len(ch_discrepancies["citations"]) >= 1
+    for cit in ch_discrepancies["citations"]:
         assert cit["verbatim_quote"] != ""
         assert cit["source_location"] != ""
 

@@ -23,6 +23,24 @@ T = TypeVar("T", bound=BaseModel)
 logger = logging.getLogger(__name__)
 
 
+def sanitize_gemini_schema(schema: Any) -> Any:
+    """
+    Recursively strips maxItems, minItems, max_items, and min_items from schema dicts
+    to prevent Gemini API 400 INVALID_ARGUMENT errors resulting from constrained decoding
+    state-space limits.
+    """
+    if isinstance(schema, dict):
+        clean = {}
+        for k, v in schema.items():
+            if k in ("max_items", "maxItems", "min_items", "minItems"):
+                continue
+            clean[k] = sanitize_gemini_schema(v)
+        return clean
+    elif isinstance(schema, list):
+        return [sanitize_gemini_schema(item) for item in schema]
+    return schema
+
+
 class GeminiProvider(BaseLLMProvider):
     """
     Production-grade Gemini LLM provider using the official google-genai SDK.
@@ -157,14 +175,22 @@ class GeminiProvider(BaseLLMProvider):
                 status_code = getattr(c_err, "code", None)
                 err_msg = str(c_err)
 
-                if status_code in (400, 401, 403) and ("key" in err_msg.lower() or "auth" in err_msg.lower()):
+                if status_code in (400, 401, 403) and (
+                    "api key" in err_msg.lower()
+                    or "api_key" in err_msg.lower()
+                    or "auth" in err_msg.lower()
+                    or "permission_denied" in err_msg.lower()
+                ):
                     raise LLMAuthError("Gemini authentication failed: Invalid or unauthorized API key.") from None
                 elif status_code == 404:
                     raise LLMError(f"Gemini model '{target_model}' not found or unsupported.") from None
                 elif status_code == 429:
                     raise LLMQuotaError("Gemini quota or rate limit exceeded. Please check project quota.") from None
                 else:
-                    raise LLMError(f"Gemini client request failed (status {status_code}).") from None
+                    sanitized_msg = err_msg.split("\n")[0]
+                    if self._api_key and self._api_key in sanitized_msg:
+                        sanitized_msg = sanitized_msg.replace(self._api_key, "[REDACTED]")
+                    raise LLMError(f"Gemini client request failed (status {status_code}): {sanitized_msg}") from None
 
             except ServerError as s_err:
                 status_code = getattr(s_err, "code", None)
@@ -219,10 +245,12 @@ class GeminiProvider(BaseLLMProvider):
         from google.genai import types
         from google.genai.errors import ClientError, ServerError, APIError
 
+        safe_schema = sanitize_gemini_schema(response_schema) if isinstance(response_schema, dict) else response_schema
+
         config_kwargs: Dict[str, Any] = {
             "temperature": temperature,
             "response_mime_type": "application/json",
-            "response_schema": response_schema,
+            "response_schema": safe_schema,
         }
         if max_output_tokens is not None:
             config_kwargs["max_output_tokens"] = max_output_tokens
@@ -303,14 +331,22 @@ class GeminiProvider(BaseLLMProvider):
                 status_code = getattr(c_err, "code", None)
                 err_msg = str(c_err)
 
-                if status_code in (400, 401, 403) and ("key" in err_msg.lower() or "auth" in err_msg.lower()):
+                if status_code in (400, 401, 403) and (
+                    "api key" in err_msg.lower()
+                    or "api_key" in err_msg.lower()
+                    or "auth" in err_msg.lower()
+                    or "permission_denied" in err_msg.lower()
+                ):
                     raise LLMAuthError("Gemini authentication failed: Invalid or unauthorized API key.") from None
                 elif status_code == 404:
                     raise LLMError(f"Gemini model '{target_model}' not found or unsupported.") from None
                 elif status_code == 429:
                     raise LLMQuotaError("Gemini quota or rate limit exceeded. Please check project quota.") from None
                 else:
-                    raise LLMError(f"Gemini client request failed (status {status_code}).") from None
+                    sanitized_msg = err_msg.split("\n")[0]
+                    if self._api_key and self._api_key in sanitized_msg:
+                        sanitized_msg = sanitized_msg.replace(self._api_key, "[REDACTED]")
+                    raise LLMError(f"Gemini client request failed (status {status_code}): {sanitized_msg}") from None
 
             except ServerError as s_err:
                 status_code = getattr(s_err, "code", None)

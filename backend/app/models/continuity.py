@@ -287,3 +287,147 @@ class QuestionAnswerAudit(Base):
     def __repr__(self) -> str:
         return f"<QuestionAnswerAudit id={self.id} sufficient={self.has_sufficient_evidence} created_at={self.created_at}>"
 
+
+class ConflictApprovalToken(Base):
+    """
+    Cryptographic single-use human approval token for conflict resolution.
+    Stores ONLY a secure SHA-256 hash of the one-time token.
+    Binds the approval request to a specific conflict ID, proposed resolution,
+    requesting agent, and expiration timestamp.
+    """
+    __tablename__ = "conflict_approval_tokens"
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+        index=True,
+    )
+    conflict_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("knowledge_conflicts.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    requesting_agent: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+        default="agent",
+    )
+    proposed_status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="resolved",
+    )
+    resolution_notes: Mapped[str] = mapped_column(
+        Text,
+        nullable=False,
+    )
+    token_hash: Mapped[str] = mapped_column(
+        String(64),
+        nullable=False,
+        index=True,
+        unique=True,
+        comment="SHA-256 secure hash of the one-time raw approval token",
+    )
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="pending",
+        index=True,
+        comment="pending, approved, rejected, consumed",
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        index=True,
+    )
+    consumed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+        index=True,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    conflict: Mapped["KnowledgeConflict"] = relationship(
+        "KnowledgeConflict",
+        foreign_keys=[conflict_id],
+    )
+
+    def __repr__(self) -> str:
+        return f"<ConflictApprovalToken id={self.id} conflict={self.conflict_id} status={self.status}>"
+
+
+class ConflictResolutionAudit(Base):
+    """
+    Immutable audit trail recording every human decision, approval, rejection,
+    and conflict resolution event with verified reviewer credentials and timestamps.
+    """
+    __tablename__ = "conflict_resolution_audits"
+
+    id: Mapped[str] = mapped_column(
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+        index=True,
+    )
+    conflict_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("knowledge_conflicts.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    approval_token_id: Mapped[Optional[str]] = mapped_column(
+        String(36),
+        nullable=True,
+        index=True,
+    )
+    decision: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        comment="approved, rejected",
+    )
+    approver_id: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+        comment="Verified human operator or Switch reviewer identity",
+    )
+    approver_auth_type: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="switch_operator_secret",
+        comment="switch_operator_secret, switch_mattermost_session, etc.",
+    )
+    resolution_notes: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    token_hash: Mapped[Optional[str]] = mapped_column(
+        String(64),
+        nullable=True,
+    )
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+        index=True,
+    )
+
+    conflict: Mapped["KnowledgeConflict"] = relationship(
+        "KnowledgeConflict",
+        foreign_keys=[conflict_id],
+    )
+
+    def __repr__(self) -> str:
+        return f"<ConflictResolutionAudit id={self.id} conflict={self.conflict_id} decision={self.decision} approver={self.approver_id}>"
+

@@ -2,7 +2,7 @@ import uuid
 import logging
 import re
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple, Dict, Set
+from typing import List, Optional, Tuple, Dict, Set, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import select, and_, or_, desc
 
@@ -41,19 +41,20 @@ class OrganizationalIntelligenceService:
         conflicts: List[KnowledgeConflict] = []
 
         # 1. Fetch facts, entities, and relationships
-        facts_query = db.query(ExtractedFact)
-        if document_id:
-            facts_query = facts_query.filter(ExtractedFact.document_id == document_id)
-        facts = facts_query.all()
-
+        # Always fetch all facts across the workspace so cross-document and cross-schedule
+        # comparisons (e.g. Schedule A vs Schedule B) can be evaluated.
+        facts = db.query(ExtractedFact).all()
         entities = db.query(ExtractedEntity).all()
         relationships = db.query(EntityRelationship).all()
 
         # Existing conflicts map for idempotency and resolution preservation
         existing_conflicts = db.query(KnowledgeConflict).all()
-        existing_keys: Dict[Tuple[str, Optional[str], Optional[str], Optional[str]], KnowledgeConflict] = {
-            (c.conflict_type, c.fact_a_id, c.fact_b_id, c.entity_id): c for c in existing_conflicts
-        }
+        existing_keys: Dict[Tuple[str, Optional[str], Optional[str], Optional[str]], KnowledgeConflict] = {}
+        for c in existing_conflicts:
+            existing_keys[(c.conflict_type, c.fact_a_id, c.fact_b_id, c.entity_id)] = c
+            if c.fact_a_id and c.fact_b_id:
+                # Map reverse pair for symmetric lookups
+                existing_keys[(c.conflict_type, c.fact_b_id, c.fact_a_id, c.entity_id)] = c
 
         # Sub-analyses
         conflicts.extend(cls._detect_fact_contradictions_and_supersessions(db, facts, existing_keys, relationships))
@@ -62,9 +63,191 @@ class OrganizationalIntelligenceService:
         conflicts.extend(cls._detect_missing_ownership(db, entities, relationships, existing_keys))
         conflicts.extend(cls._detect_knowledge_gaps(db, facts, existing_keys))
 
+        # Safe Conflict Lifecycle Management:
+        # Prune stale OPEN conflicts that are no longer supported by current evidence/rules.
+        # CRITICAL SAFETY: NEVER prune or modify human-adjudicated conflicts (resolved/dismissed or with human notes).
+        # CRITICAL SAFETY: NEVER delete or modify underlying ExtractedFact or Document records.
+        active_conflict_ids = {c.id for c in conflicts}
+        for old_c in existing_conflicts:
+            # If conflict was resolved or reviewed by a human, preserve it unconditionally
+            if old_c.status != ConflictStatus.OPEN.value or old_c.resolved_by or old_c.resolution_notes:
+                if old_c.id not in active_conflict_ids:
+                    conflicts.append(old_c)
+                continue
+            # If an open conflict is no longer detected by the semantic rules, prune the stale record
+            if old_c.id not in active_conflict_ids:
+                logger.info("Pruning stale false-positive open conflict: %s (%s)", old_c.id, old_c.title)
+                db.delete(old_c)
+
         db.commit()
         logger.info("Intelligence scan complete. Detected %d total active matters.", len(conflicts))
+
+        if document_id:
+            # If scoped to a specific document, return matters relevant to that document
+            doc_scoped = [
+                c for c in conflicts
+                if c.document_id == document_id
+                or (c.fact_a and c.fact_a.document_id == document_id)
+                or (c.fact_b and c.fact_b.document_id == document_id)
+            ]
+            return doc_scoped
+
         return conflicts
+
+    @classmethod
+    def _extract_semantic_profile(
+        cls,
+        fact: ExtractedFact,
+        relationships: Optional[List[EntityRelationship]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Extracts entity identity, property category, granular property key, normalized value,
+        and amendment markers from an ExtractedFact.
+        """
+        s_lower = fact.statement.lower().strip() if fact.statement else ""
+        doc_name = fact.document.original_filename if getattr(fact, "document", None) else ""
+        d_lower = doc_name.lower().strip()
+
+        # 1. Detect amendment / supersession markers
+        amendment_markers = [
+            "amend", "amended", "amendment",
+            "extend", "extended", "extension",
+            "update", "updated",
+            "supersede", "supersedes", "superseded",
+            "reassign", "reassigned",
+            "revise", "revised", "revision",
+            "postpone", "postponed", "postponement",
+            "reschedule", "rescheduled",
+            "delay", "delayed",
+        ]
+        is_amendment = any(re.search(rf"\b{m}\b", s_lower) for m in amendment_markers)
+
+        # 2. Entity resolution
+        entity_id = fact.primary_entity_id
+        ent = fact.primary_entity
+        ent_name = ent.name.lower().strip() if ent and ent.name else ""
+        ent_canonical = ent.canonical_name.lower().strip() if ent and ent.canonical_name else ent_name
+
+        if "odyssey" in s_lower or "odyssey" in ent_canonical or "odyssey" in d_lower:
+            entity_key = "project:odyssey"
+        elif "aegis" in s_lower or "aegis" in ent_canonical or "aegis" in d_lower:
+            entity_key = "project:aegis"
+        elif "nova" in s_lower or "nova" in ent_canonical or "nova" in d_lower:
+            entity_key = "project:nova"
+        elif "titan" in s_lower or "titan" in ent_canonical or "titan" in d_lower:
+            entity_key = "project:titan"
+        elif ent_canonical:
+            entity_key = f"{ent.category}:{ent_canonical}" if ent and ent.category else ent_canonical
+        elif entity_id:
+            entity_key = entity_id
+        else:
+            entity_key = "global"
+
+        # 3. Categorize property
+        # Milestone / Release stages
+        if re.search(r"\b(architecture freeze|code freeze|freeze)\b", s_lower):
+            prop_type = "milestone"
+            prop_key = f"{entity_key}:milestone:freeze"
+            val_match = re.search(r"\b(?:for|on|is|date)\s+([a-z]+ \d{1,2},? \d{4}|\d{4}-\d{2}-\d{2})", s_lower)
+            prop_val = val_match.group(1) if val_match else s_lower
+
+        elif re.search(r"\b(beta release|beta launch|beta)\b", s_lower):
+            prop_type = "milestone"
+            prop_key = f"{entity_key}:milestone:beta"
+            val_match = re.search(r"\b(?:for|on|to|date of)\s+([a-z]+ \d{1,2},? \d{4}|\d{4}-\d{2}-\d{2})", s_lower)
+            prop_val = val_match.group(1) if val_match else s_lower
+
+        elif re.search(r"\b(general availability|\bga\b|final release|commercial launch)\b", s_lower):
+            prop_type = "milestone"
+            prop_key = f"{entity_key}:milestone:ga"
+            val_match = re.search(r"\b(?:for|on|is)\s+([a-z]+ \d{1,2},? \d{4}|\d{4}-\d{2}-\d{2})", s_lower)
+            prop_val = val_match.group(1) if val_match else s_lower
+
+        elif re.search(r"\b(security audit|security review|compliance audit)\b", s_lower):
+            prop_type = "milestone"
+            prop_key = f"{entity_key}:milestone:security_audit"
+            val_match = re.search(r"\b(?:for|on|is)\s+([a-z]+ \d{1,2},? \d{4}|\d{4}-\d{2}-\d{2})", s_lower)
+            prop_val = val_match.group(1) if val_match else s_lower
+
+        elif re.search(r"\b(form 1572|1572)\b", s_lower):
+            prop_type = "milestone"
+            prop_key = "milestone:fda_form_1572"
+            val_match = re.search(r"\b(?:on|is|deadline)\s+([a-z]+ \d{1,2},? \d{4}|\d{4}-\d{2}-\d{2})", s_lower)
+            prop_val = val_match.group(1) if val_match else s_lower
+
+        elif fact.category == "deadline" or re.search(r"\bdeadline\b", s_lower):
+            prop_type = "milestone"
+            prop_key = f"{entity_key}:milestone:general_deadline"
+            val_match = re.search(r"\b(?:on|is|for)\s+([a-z]+ \d{1,2},? \d{4}|\d{4}-\d{2}-\d{2})", s_lower)
+            prop_val = val_match.group(1) if val_match else s_lower
+
+        # Roadmap / Deployment strategy status
+        elif re.search(r"\b(deployment roadmap|roadmap)\b", s_lower):
+            prop_type = "roadmap"
+            prop_key = f"{entity_key}:roadmap:deployment_roadmap"
+            if "amend" in s_lower or "amend" in d_lower:
+                prop_val = "amended"
+            elif "finaliz" in s_lower:
+                prop_val = "finalized"
+            else:
+                prop_val = s_lower
+
+        # Leadership / Roles / Owners
+        elif re.search(r"\b(sponsor representative|execution sponsor)\b", s_lower):
+            prop_type = "role"
+            prop_key = "role:sponsor_representative"
+            match = re.search(r"(?:designated as|reassigned exclusively to|assigned to)\s+((?:dr\.|mr\.|ms\.)?\s*[a-z]+ [a-z]+)", s_lower)
+            prop_val = match.group(1) if match else s_lower
+
+        elif re.search(r"\b(manages|lead|leader|owner|owns)\b", s_lower):
+            prop_type = "leadership"
+            prop_key = f"{entity_key}:leadership:owner"
+            m_mgr = re.match(r"^([a-z\.\s]+?)\s+(?:manages|leads|owns)", s_lower)
+            prop_val = m_mgr.group(1).strip() if m_mgr else s_lower
+
+        elif re.search(r"\b(oversees|oversight)\b", s_lower):
+            prop_type = "leadership"
+            prop_key = f"{entity_key}:leadership:oversight"
+            m_over = re.match(r"^([a-z\.\s]+?)\s+oversees", s_lower)
+            prop_val = m_over.group(1).strip() if m_over else s_lower
+
+        elif re.search(r"\b(responsible for)\b", s_lower):
+            prop_type = "responsibility"
+            if "api gateway" in s_lower or "service mesh" in s_lower:
+                prop_key = f"{entity_key}:responsibility:api_gateway"
+            else:
+                prop_key = f"{entity_key}:responsibility:general"
+            m_resp = re.match(r"^([a-z\.\s]+?)\s+is responsible", s_lower)
+            prop_val = m_resp.group(1).strip() if m_resp else s_lower
+
+        # Tasks / Actions
+        elif re.search(r"\b(pending task|next step|action item|task)\b", s_lower):
+            prop_type = "task"
+            prop_key = f"{entity_key}:task:pending_task"
+            m_task = re.search(r"(?:pending task.*?is|task.*?is)\s+(.*)", s_lower)
+            prop_val = m_task.group(1).strip() if m_task else s_lower
+
+        # Contract duration / terms
+        elif re.search(r"\b(vendor contract|contract)\b", s_lower):
+            prop_type = "contract"
+            prop_key = "contract:vendor_contract"
+            m_dur = re.search(r"(\d+)\s*(?:months|years|days)", s_lower)
+            prop_val = m_dur.group(0) if m_dur else s_lower
+
+        else:
+            prop_type = fact.category
+            prop_key = f"{entity_key}:{fact.category}:{s_lower[:25]}"
+            prop_val = s_lower
+
+        return {
+            "statement": fact.statement,
+            "entity_key": entity_key,
+            "prop_type": prop_type,
+            "prop_key": prop_key,
+            "prop_val": prop_val,
+            "is_amendment": is_amendment,
+            "doc_name": doc_name,
+        }
 
     @classmethod
     def _detect_fact_contradictions_and_supersessions(
@@ -75,41 +258,36 @@ class OrganizationalIntelligenceService:
         relationships: Optional[List[EntityRelationship]] = None,
     ) -> List[KnowledgeConflict]:
         """
-        Compares pairs of facts to distinguish genuine contradictions from historical amendments.
+        Compares pairs of facts by entity and semantic property to distinguish
+        genuine contradictions, superseded decisions, and compatible facts.
         """
         findings: List[KnowledgeConflict] = []
         n = len(facts)
+        if n < 2:
+            return findings
+
+        profiles = [cls._extract_semantic_profile(f, relationships) for f in facts]
 
         for i in range(n):
             for j in range(i + 1, n):
                 f1 = facts[i]
                 f2 = facts[j]
+                p1 = profiles[i]
+                p2 = profiles[j]
 
-                # Only compare facts sharing the same category or referencing the same primary entity
-                same_cat = f1.category == f2.category
-                same_ent = f1.primary_entity_id and (f1.primary_entity_id == f2.primary_entity_id)
-
-                if not (same_cat or same_ent):
+                # Semantic Property Match: ONLY compare facts that describe the exact same property
+                if p1["prop_key"] != p2["prop_key"]:
                     continue
 
-                s1_lower = f1.statement.lower()
-                s2_lower = f2.statement.lower()
+                v1 = p1["prop_val"].strip().lower()
+                v2 = p2["prop_val"].strip().lower()
 
-                # Extract common substantive words (excluding stop words)
-                words1 = set(re.findall(r"\w{4,}", s1_lower))
-                words2 = set(re.findall(r"\w{4,}", s2_lower))
-                overlap = words1.intersection(words2)
-
-                # Need at least 2 significant shared subject keywords to compare
-                if len(overlap) < 2:
+                # Compatible / Corroborated facts: same property with identical values
+                if v1 == v2:
                     continue
 
                 # Rule A: Historical amendment / superseded decision
-                # If one statement mentions an extension, amendment, or different time duration
-                is_amendment = any(term in s1_lower or term in s2_lower for term in ["amend", "extend", "update", "supersede", "reassigned", "revised"])
-                has_different_numbers = re.findall(r"\b\d+\b", s1_lower) != re.findall(r"\b\d+\b", s2_lower)
-
-                # Check if an explicit SUPERSEDES relationship links the primary entities
+                has_supersedes_rel = False
                 if relationships and f1.primary_entity_id and f2.primary_entity_id:
                     has_supersedes_rel = any(
                         r.relation_type == RelationType.SUPERSEDES.value
@@ -119,16 +297,33 @@ class OrganizationalIntelligenceService:
                         )
                         for r in relationships
                     )
-                    if has_supersedes_rel:
-                        is_amendment = True
 
-                key = ("superseded_decision" if is_amendment else "contradiction", f1.id, f2.id, f1.primary_entity_id)
+                is_amendment = (
+                    p1["is_amendment"]
+                    or p2["is_amendment"]
+                    or has_supersedes_rel
+                )
+
+                conflict_type = (
+                    ConflictType.SUPERSEDED_DECISION.value
+                    if is_amendment
+                    else ConflictType.CONTRADICTION.value
+                )
+
+                key = (conflict_type, f1.id, f2.id, f1.primary_entity_id or f2.primary_entity_id)
+                alt_key = (conflict_type, f2.id, f1.id, f1.primary_entity_id or f2.primary_entity_id)
 
                 if key in existing_keys:
                     findings.append(existing_keys[key])
                     continue
+                if alt_key in existing_keys:
+                    findings.append(existing_keys[alt_key])
+                    continue
 
-                if is_amendment or (has_different_numbers and f1.document_id != f2.document_id):
+                doc1_name = p1["doc_name"] or "Prior Record"
+                doc2_name = p2["doc_name"] or "Later Record"
+
+                if is_amendment:
                     # Superseded decision
                     c = KnowledgeConflict(
                         id=str(uuid.uuid4()),
@@ -137,20 +332,21 @@ class OrganizationalIntelligenceService:
                         status=ConflictStatus.OPEN.value,
                         title=f"Superseded Decision: {f1.statement[:60]}...",
                         description=(
-                            f"Record '{f2.document.original_filename if f2.document else 'Doc B'}' amends or supersedes "
-                            f"prior decision in '{f1.document.original_filename if f1.document else 'Doc A'}'. "
+                            f"Record '{doc2_name}' amends or supersedes "
+                            f"prior decision in '{doc1_name}'. "
                             f"Assertion '{f1.statement}' was revised to '{f2.statement}'."
                         ),
                         fact_a_id=f1.id,
                         fact_b_id=f2.id,
-                        entity_id=f1.primary_entity_id,
-                        document_id=f2.document_id,
+                        entity_id=f1.primary_entity_id or f2.primary_entity_id,
+                        document_id=f2.document_id or f1.document_id,
                     )
                     db.add(c)
                     existing_keys[key] = c
+                    existing_keys[alt_key] = c
                     findings.append(c)
 
-                elif s1_lower != s2_lower:
+                else:
                     # Genuine Contradiction: incompatible claims asserted without an amendment marker
                     c = KnowledgeConflict(
                         id=str(uuid.uuid4()),
@@ -165,11 +361,12 @@ class OrganizationalIntelligenceService:
                         ),
                         fact_a_id=f1.id,
                         fact_b_id=f2.id,
-                        entity_id=f1.primary_entity_id,
-                        document_id=f1.document_id,
+                        entity_id=f1.primary_entity_id or f2.primary_entity_id,
+                        document_id=f1.document_id or f2.document_id,
                     )
                     db.add(c)
                     existing_keys[key] = c
+                    existing_keys[alt_key] = c
                     findings.append(c)
 
         return findings

@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 
 from app.schemas.knowledge import (
     ExtractedFactDetailResponse,
@@ -35,12 +35,13 @@ class ConflictStatus(str, Enum):
     OPEN = "open"
     RESOLVED = "resolved"
     DISMISSED = "dismissed"
+    ARCHIVED = "archived"
 
 
 class KnowledgeConflictBase(BaseModel):
     conflict_type: str = Field(..., description="Classification of conflict or gap")
     severity: str = Field("medium", description="Severity: low, medium, high, critical")
-    status: str = Field("open", description="Status: open, resolved, dismissed")
+    status: str = Field("open", description="Status: open, resolved, dismissed, archived")
     title: str = Field(..., min_length=1, max_length=255, description="Brief descriptive summary")
     description: str = Field(..., description="Detailed explanation of why this matter requires review")
     fact_a_id: Optional[str] = Field(None, description="Primary supporting fact UUID")
@@ -56,6 +57,65 @@ class KnowledgeConflictResolve(BaseModel):
     status: str = Field("resolved", description="New status: resolved, dismissed")
     resolution_notes: str = Field(..., min_length=2, description="Auditor explanation or clarification")
     resolved_by: Optional[str] = Field("auditor", description="Reviewer identifier")
+    approval_token: Optional[str] = Field(None, description="One-time human approval token required for resolution")
+
+
+class ConflictApprovalRequestCreate(BaseModel):
+    proposed_status: str = Field("resolved", description="Proposed status: resolved or dismissed")
+    resolution_notes: str = Field(..., min_length=3, description="Justification for resolving the discrepancy")
+    requesting_agent: Optional[str] = Field("relay-knowledge-extractor", description="Agent requesting resolution")
+
+
+class ConflictApprovalRequestResponse(BaseModel):
+    id: str = Field(..., description="Approval request UUID")
+    conflict_id: str = Field(..., description="Target conflict UUID")
+    requesting_agent: str = Field(..., description="Requesting agent name")
+    proposed_status: str = Field(..., description="Proposed resolution status")
+    resolution_notes: str = Field(..., description="Agent resolution justification")
+    status: str = Field(..., description="Request status: pending, approved, rejected, consumed")
+    expires_at: datetime = Field(..., description="Expiration timestamp")
+    created_at: datetime = Field(..., description="Request creation timestamp")
+    message: str = Field(..., description="Status summary for user/channel")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ConflictHumanAdjudicateRequest(BaseModel):
+    request_id: str = Field(..., description="UUID of the ConflictApprovalToken")
+    decision: str = Field(..., description="'approved' or 'rejected'")
+    approver_id: Optional[str] = Field(None, description="Optional human identity; strictly overridden by verified session")
+    session_token: Optional[str] = Field(None, description="Mattermost session token or Personal Access Token (PAT)", repr=False)
+    login_id: Optional[str] = Field(None, description="Optional Mattermost username or email for direct human credential authentication")
+    password: Optional[str] = Field(None, description="Optional Mattermost password for direct human credential authentication", repr=False)
+    approver_auth_type: Optional[str] = Field(None, description="Verification type: mattermost_session, mattermost_credentials, or switch_operator_secret")
+    decision_notes: Optional[str] = Field(None, description="Optional notes from human reviewer")
+
+
+class MattermostLoginRequest(BaseModel):
+    login_id: str = Field(..., description="Mattermost username or email")
+    password: str = Field(..., description="Mattermost account password", repr=False)
+
+
+class MattermostLoginResponse(BaseModel):
+    success: bool
+    user_id: str
+    username: str
+    email: Optional[str] = None
+    token: str = Field(..., repr=False)
+    verified_approver_id: str
+    message: str
+
+
+class ConflictResolutionAuditResponse(BaseModel):
+    id: str = Field(..., description="Audit record UUID")
+    conflict_id: str = Field(..., description="Target conflict UUID")
+    decision: str = Field(..., description="Decision made: approved, rejected")
+    approver_id: str = Field(..., description="Identity of the human approver")
+    approver_auth_type: str = Field(..., description="Authentication method verified")
+    resolution_notes: Optional[str] = Field(None, description="Resolution notes")
+    timestamp: datetime = Field(..., description="Audit timestamp")
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class KnowledgeConflictResponse(KnowledgeConflictBase):
@@ -140,6 +200,7 @@ class DossierChapter(BaseModel):
     facts: List[ExtractedFactDetailResponse] = Field(default_factory=list, description="Grounding facts")
     citations: List[FactCitationResponse] = Field(default_factory=list, description="Verbatim source evidence citations")
     action_items: List[str] = Field(default_factory=list, description="Prescribed actions")
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Structured chapter-specific metadata")
 
 
 class HandoverDossierContent(BaseModel):
@@ -188,26 +249,67 @@ class QARequest(BaseModel):
 
 class QACitation(BaseModel):
     document_id: Optional[str] = None
-    document_filename: str
-    source_location: str
-    verbatim_quote: str
+    document_filename: str = Field(..., description="Source document filename")
+    source_document: Optional[str] = Field(None, description="Source document title or filename")
+    source_document_title: Optional[str] = Field(None, description="Alias for source document title")
+    segment_id: Optional[str] = Field(None, description="UUID of the supporting document segment")
+    document_segment_id: Optional[str] = Field(None, description="Alias for segment UUID")
+    source_location: str = Field(..., description="Segment or page location")
+    verbatim_quote: str = Field(..., description="Exact supporting quotation")
+    quote: Optional[str] = Field(None, description="Alias for verbatim quote")
     char_start: Optional[int] = None
     char_end: Optional[int] = None
     fact_id: Optional[str] = None
     fact_statement: Optional[str] = None
+
+    @model_validator(mode="after")
+    def sync_citation_aliases(self) -> "QACitation":
+        if self.quote is None and self.verbatim_quote is not None:
+            self.quote = self.verbatim_quote
+        elif self.verbatim_quote is None and self.quote is not None:
+            self.verbatim_quote = self.quote
+
+        if self.segment_id is None and self.document_segment_id is not None:
+            self.segment_id = self.document_segment_id
+        elif self.document_segment_id is None and self.segment_id is not None:
+            self.document_segment_id = self.segment_id
+
+        if self.source_document is None and self.document_filename is not None:
+            self.source_document = self.document_filename
+        if self.source_document_title is None and self.document_filename is not None:
+            self.source_document_title = self.document_filename
+        return self
 
 
 class QAResponse(BaseModel):
     question: str
     answer: str
     has_sufficient_evidence: bool = True
-    confidence_score: float = Field(1.0, ge=0.0, le=1.0)
+    is_grounded: bool = True
+    is_grounding: bool = True
+    missing_evidence: bool = False
+    confidence_score: float = Field(0.0, ge=0.0, le=1.0)
+    confidence: float = Field(0.0, ge=0.0, le=1.0)
     citations: List[QACitation] = Field(default_factory=list)
     supporting_facts_count: int = 0
     conflicts_detected: List[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode="after")
+    def sync_response_grounding(self) -> "QAResponse":
+        grounded = bool(self.has_sufficient_evidence and self.is_grounded and self.is_grounding)
+        self.is_grounded = grounded
+        self.is_grounding = grounded
+        self.has_sufficient_evidence = grounded
+        self.missing_evidence = not grounded
+
+        if self.confidence == 0.0 and self.confidence_score > 0.0:
+            self.confidence = self.confidence_score
+        elif self.confidence_score == 0.0 and self.confidence > 0.0:
+            self.confidence_score = self.confidence
+        return self
 
 
 class QAHistoryResponse(BaseModel):

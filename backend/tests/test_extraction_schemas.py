@@ -245,3 +245,63 @@ def test_prompt_hash_sensitive_to_template_changes():
     assert base_hash != modified_sys_hash
     assert base_hash != modified_user_hash
     assert modified_sys_hash != modified_user_hash
+
+
+def test_gemini_schema_omits_max_items_for_gemini_compatibility():
+    """
+    Regression test: Verify that JSON schema emitted for Gemini omits maxItems/minItems,
+    which otherwise trigger Gemini API '400 INVALID_ARGUMENT' due to constrained-decoding
+    FSM state-space complexity bounds.
+    """
+    schema = DocumentExtractionPayload.model_json_schema()
+    schema_str = str(schema)
+    assert "maxItems" not in schema_str
+    assert "minItems" not in schema_str
+
+    # Ensure essential schema structure remains intact
+    assert "facts" in schema["properties"]
+    assert "entities" in schema["properties"]
+    assert "relationships" in schema["properties"]
+
+
+def test_pydantic_validation_preserves_length_bounds():
+    """
+    Regression test: Verify that removing maxItems from JSON schema does NOT weaken
+    Python-side Pydantic validation: bounds like max_length=500 and max_length=100
+    are still strictly enforced during model validation.
+    """
+    # 1. Facts limit (500)
+    valid_fact = RawFactExtraction(
+        category=FactCategory.DECISION,
+        statement="Valid architectural decision",
+    )
+    # 500 facts should succeed
+    payload_500 = DocumentExtractionPayload(facts=[valid_fact] * 500)
+    assert len(payload_500.facts) == 500
+
+    # 501 facts must fail validation
+    with pytest.raises(ValidationError) as exc:
+        DocumentExtractionPayload(facts=[valid_fact] * 501)
+    assert "facts" in str(exc.value)
+
+    # 2. Mentions limit (100)
+    valid_mention = RawEntityMention(
+        segment_id="seg-1",
+        surface_text="Dr. Smith",
+    )
+    # 100 mentions should succeed
+    entity_100 = RawEntityExtraction(
+        name="Dr. Smith",
+        category=EntityCategory.PERSON,
+        mentions=[valid_mention] * 100,
+    )
+    assert len(entity_100.mentions) == 100
+
+    # 101 mentions must fail validation
+    with pytest.raises(ValidationError) as exc:
+        RawEntityExtraction(
+            name="Dr. Smith",
+            category=EntityCategory.PERSON,
+            mentions=[valid_mention] * 101,
+        )
+    assert "mentions" in str(exc.value)

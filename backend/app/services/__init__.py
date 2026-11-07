@@ -28,6 +28,8 @@ from app.services.intelligence_analyzer import OrganizationalIntelligenceService
 from app.services.continuity_service import ContinuityService
 from app.services.dossier_service import HandoverDossierService
 from app.services.qa_service import QuestionAnsweringService
+from app.services.approval_service import ConflictApprovalService
+from app.services.mattermost_auth import MattermostAuthService, InvalidSessionTokenError
 
 __all__ = [
     "TextExtractor",
@@ -55,4 +57,5 @@ __all__ = [
     "ContinuityService",
     "HandoverDossierService",
     "QuestionAnsweringService",
+    "ConflictApprovalService",
 ]

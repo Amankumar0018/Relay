@@ -25,6 +25,30 @@ class StrictExtractionBaseModel(BaseModel):
                 raise ValueError(f"Extra inputs are not permitted: {unexpected}")
         return data
 
+    @classmethod
+    def __get_pydantic_json_schema__(cls, core_schema: Any, handler: Any) -> Any:
+        """
+        Customizes JSON schema generation for Gemini API compatibility.
+        Strips 'maxItems' and 'minItems' from array schemas sent to Gemini,
+        preventing '400 INVALID_ARGUMENT' caused by Gemini's constrained decoding
+        state-space complexity limits. Python-side Pydantic validation continues
+        to strictly enforce max_length and min_length bounds on parsed data.
+        """
+        schema = handler(core_schema)
+
+        def _clean_schema(s: Any) -> None:
+            if isinstance(s, dict):
+                s.pop("maxItems", None)
+                s.pop("minItems", None)
+                for v in s.values():
+                    _clean_schema(v)
+            elif isinstance(s, list):
+                for item in s:
+                    _clean_schema(item)
+
+        _clean_schema(schema)
+        return schema
+
 
 class RawCitationReference(StrictExtractionBaseModel):
     """

@@ -54,6 +54,7 @@ def client(db_session: Session, tmp_path, monkeypatch) -> Generator[TestClient, 
     test_upload_dir = tmp_path / "uploads"
     test_upload_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr("app.core.config.settings.UPLOAD_DIR", str(test_upload_dir))
+    monkeypatch.setattr("app.core.config.settings.SWITCH_OPERATOR_SECRET", "test-operator-secret-2026")
 
     def override_get_db():
         try:

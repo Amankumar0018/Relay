@@ -14,7 +14,7 @@ from app.integrations.llm.base import (
     LLMResponse,
     LLMStructuredResponse,
 )
-from app.integrations.llm.gemini_provider import GeminiProvider
+from app.integrations.llm.gemini_provider import GeminiProvider, sanitize_gemini_schema
 from app.schemas.extraction import DocumentExtractionPayload
 from app.core.config import settings
 
@@ -301,6 +301,69 @@ def test_gemini_provider_generate_structured_retry_on_server_error():
 
     assert isinstance(res.data, DocumentExtractionPayload)
     assert mock_client.models.generate_content.call_count == 2
+
+
+def test_sanitize_gemini_schema_strips_array_length_constraints():
+    """
+    Regression test: verify sanitize_gemini_schema removes max_items, maxItems, min_items,
+    and minItems recursively without mutating other properties.
+    """
+    input_schema = {
+        "type": "object",
+        "properties": {
+            "facts": {
+                "type": "array",
+                "max_items": 500,
+                "maxItems": 500,
+                "min_items": 1,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "statement": {"type": "string", "maxLength": 2000},
+                        "citations": {
+                            "type": "array",
+                            "max_items": 50,
+                            "items": {"type": "string"},
+                        },
+                    },
+                },
+            }
+        },
+    }
+
+    sanitized = sanitize_gemini_schema(input_schema)
+    sanitized_str = str(sanitized)
+    assert "max_items" not in sanitized_str
+    assert "maxItems" not in sanitized_str
+    assert "min_items" not in sanitized_str
+    assert "minItems" not in sanitized_str
+    assert sanitized["properties"]["facts"]["items"]["properties"]["statement"]["maxLength"] == 2000
+
+
+def test_gemini_client_error_sanitization_and_masking():
+    """
+    Regression test: verify ClientError 400 preserves sanitized failure reason while masking API keys.
+    """
+    from google.genai.errors import ClientError
+
+    secret_key = "AIzaSySuperSecretKey123"
+    provider = GeminiProvider(api_key=secret_key, max_retries=1)
+    mock_client = MagicMock()
+
+    mock_client.models.generate_content.side_effect = ClientError(
+        400,
+        {"error": {"code": 400, "message": f"Request contains an invalid argument secret token {secret_key}"}},
+        MagicMock(),
+    )
+    provider._client = mock_client
+
+    with pytest.raises(LLMError) as exc_info:
+        provider.generate_text("test")
+
+    err_msg = str(exc_info.value)
+    assert secret_key not in err_msg
+    assert "[REDACTED]" in err_msg
+    assert "status 400" in err_msg
 
 
 @pytest.mark.live_llm

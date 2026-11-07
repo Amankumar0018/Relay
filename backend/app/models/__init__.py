@@ -14,6 +14,8 @@ from app.models.continuity import (
     KnowledgeConflict,
     HandoverDossier,
     QuestionAnswerAudit,
+    ConflictApprovalToken,
+    ConflictResolutionAudit,
 )
 
 __all__ = [
@@ -30,4 +32,6 @@ __all__ = [
     "KnowledgeConflict",
     "HandoverDossier",
     "QuestionAnswerAudit",
+    "ConflictApprovalToken",
+    "ConflictResolutionAudit",
 ]
