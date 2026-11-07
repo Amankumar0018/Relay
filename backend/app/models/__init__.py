@@ -1,5 +1,5 @@
 from app.core.database import Base
-from app.models.document import Document
+from app.models.document import Document, DocumentContent
 from app.models.knowledge import (
     DocumentSegment,
     ExtractedEntity,
@@ -21,6 +21,7 @@ from app.models.continuity import (
 __all__ = [
     "Base",
     "Document",
+    "DocumentContent",
     "DocumentSegment",
     "ExtractedEntity",
     "EntityMention",

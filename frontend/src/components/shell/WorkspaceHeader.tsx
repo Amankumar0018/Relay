@@ -114,8 +114,8 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
           className="hidden md:flex items-center gap-1.5 px-2 py-1 border border-carbon bg-raw-paper-light text-[10px] font-mono"
           title={
             backendHealth
-              ? `FastAPI ${backendHealth.version} connected on localhost:8000`
-              : "Checking backend connectivity on localhost:8000"
+              ? `FastAPI ${backendHealth.version} connected`
+              : "Checking backend connectivity"
           }
         >
           <span className="font-bold uppercase text-carbon/60">BACKEND:</span>
@@ -126,7 +126,7 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
                   <span className="animate-ping absolute inline-flex h-full w-full bg-industrial-green opacity-75" />
                   <span className="relative inline-flex w-2 h-2 bg-industrial-green border border-carbon" />
                 </span>
-                LIVE :8000
+                LIVE
               </span>
             ) : (
               <span className="flex items-center gap-1.5 font-bold text-signal-orange uppercase">

@@ -3,14 +3,17 @@ from sqlalchemy import create_engine, text, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 from app.core.config import settings
 
-connect_args = {}
+engine_kwargs = {"echo": settings.DEBUG}
 if settings.DATABASE_URL.startswith("sqlite"):
-    connect_args["check_same_thread"] = False
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+else:
+    # PostgreSQL / Neon Serverless connection pool settings
+    engine_kwargs["pool_pre_ping"] = True
+    engine_kwargs["pool_recycle"] = 300
 
 engine = create_engine(
     settings.DATABASE_URL,
-    connect_args=connect_args,
-    echo=settings.DEBUG,
+    **engine_kwargs,
 )
 
 

@@ -29,7 +29,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         DocumentService.get_upload_dir()
         logger.info("Database initialized, storage directory verified.")
     except Exception as exc:
-        logger.error("Database initialization failed: %s", exc)
+        logger.critical("Database initialization failed: %s", exc)
+        if (settings.ENVIRONMENT or "").lower() == "production":
+            raise RuntimeError(
+                f"CRITICAL: Application failed to initialize database in production environment: {exc}"
+            ) from exc
     yield
     logger.info("Application shutting down.")
 

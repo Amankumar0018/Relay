@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, func, desc
 
 from app.core.config import settings
-from app.models.document import Document
+from app.models.document import Document, DocumentContent
 from app.models.knowledge import DocumentSegment
 from app.services.extractor import ExtractionError
 from app.services.segmentation import DocumentParserService
@@ -150,6 +150,13 @@ class DocumentService:
 
         db.add(document)
 
+        # Store raw binary persistently in database to ensure zero data loss on ephemeral hosting (Render Free)
+        content_record = DocumentContent(
+            document_id=doc_id,
+            content=file_bytes,
+        )
+        db.add(content_record)
+
         # Add segments if extraction succeeded
         if extraction_status == "completed" and parse_result and parse_result.segments:
             for seg_data in parse_result.segments:
@@ -186,6 +193,31 @@ class DocumentService:
         return db.scalar(select(Document).where(Document.id == document_id))
 
     @classmethod
+    def get_document_file_bytes(cls, db: Session, document: Document) -> Optional[bytes]:
+        """
+        Retrieves file bytes from disk cache if present, otherwise fetches from persistent database storage
+        and re-caches to disk if possible.
+        """
+        p = Path(document.storage_path)
+        if p.exists() and p.is_file():
+            try:
+                return p.read_bytes()
+            except Exception as e:
+                logger.warning("Could not read file from disk path %s: %s", document.storage_path, e)
+
+        # Fallback to database-backed persistent content (essential for ephemeral container persistence)
+        content_record = db.scalar(select(DocumentContent).where(DocumentContent.document_id == document.id))
+        if content_record and content_record.content:
+            try:
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_bytes(content_record.content)
+            except Exception as e:
+                logger.debug("Could not write hydrated file to disk %s: %s", document.storage_path, e)
+            return content_record.content
+
+        return None
+
+    @classmethod
     def get_document_segments(cls, db: Session, document_id: str) -> List[DocumentSegment]:
         """Fetches all segments for a document ordered deterministically by sequence_number."""
         doc = cls.get_document(db, document_id)
@@ -215,14 +247,12 @@ class DocumentService:
                 detail=f"Document with ID '{document_id}' not found.",
             )
 
-        if not os.path.exists(document.storage_path):
+        file_bytes = cls.get_document_file_bytes(db, document)
+        if file_bytes is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Physical document file missing from storage.",
+                detail="Physical document file missing from storage and database content archive.",
             )
-
-        with open(document.storage_path, "rb") as f:
-            file_bytes = f.read()
 
         try:
             parse_result = DocumentParserService.parse(file_bytes, document.file_extension)

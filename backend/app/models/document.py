@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, List, Optional
-from sqlalchemy import String, Integer, Text, DateTime, func, Index
+from sqlalchemy import String, Integer, Text, DateTime, LargeBinary, ForeignKey, func, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
@@ -12,6 +12,36 @@ if TYPE_CHECKING:
         ExtractedFact,
         ExtractionRun,
     )
+
+
+class DocumentContent(Base):
+    """
+    Stores raw binary document files persistently in the relational database.
+    Ensures zero data loss across ephemeral cloud container resets (such as Render Free tier)
+    without requiring external paid cloud object storage.
+    """
+    __tablename__ = "document_contents"
+
+    document_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
+    )
+    content: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    document: Mapped["Document"] = relationship(
+        "Document",
+        back_populates="raw_content",
+    )
+
+    def __repr__(self) -> str:
+        return f"<DocumentContent document_id={self.document_id} size={len(self.content)} bytes>"
 
 
 class Document(Base):
@@ -82,6 +112,12 @@ class Document(Base):
         back_populates="document",
         cascade="all, delete-orphan",
         order_by="ExtractionRun.created_at.desc()",
+    )
+    raw_content: Mapped[Optional["DocumentContent"]] = relationship(
+        "DocumentContent",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        uselist=False,
     )
 
     def __repr__(self) -> str:

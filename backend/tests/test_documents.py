@@ -258,6 +258,41 @@ def test_download_document(client: TestClient):
     assert client.get("/api/v1/documents/missing-uuid/download").status_code == 404
 
 
+def test_ephemeral_container_database_storage_fallback(client: TestClient, db_session: Session):
+    """
+    Verifies that when local disk files are lost (e.g. Render Free container restarts),
+    downloads and re-segmentation seamlessly recover using persistent database storage.
+    """
+    import os
+    content = b"Render ephemeral survival test: vital institutional handover knowledge."
+    post_res = client.post(
+        "/api/v1/documents",
+        files={"file": ("ephemeral_test.txt", io.BytesIO(content), "text/plain")},
+    )
+    assert post_res.status_code == 201
+    doc_id = post_res.json()["document"]["id"]
+
+    # Verify physical file was initially created
+    doc = db_session.scalar(select(Document).where(Document.id == doc_id))
+    assert doc is not None
+    assert os.path.exists(doc.storage_path)
+
+    # Simulate container wipe/restart: delete file from ephemeral disk
+    os.remove(doc.storage_path)
+    assert not os.path.exists(doc.storage_path)
+
+    # 1. Download should seamlessly fallback to database-backed content
+    dl_res = client.get(f"/api/v1/documents/{doc_id}/download")
+    assert dl_res.status_code == 200
+    assert dl_res.content == content
+
+    # 2. Re-segmentation via service should also succeed using database fallback
+    from app.services.document_service import DocumentService
+    segments = DocumentService.segment_document(db_session, doc_id)
+    assert len(segments) > 0
+    assert segments[0].content is not None
+
+
 def test_delete_document(client: TestClient, db_session: Session):
     content = b"Temporary document to be purged."
     post_res = client.post(

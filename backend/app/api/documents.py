@@ -1,8 +1,9 @@
 import os
 import logging
+from urllib.parse import quote
 from typing import Optional, List
 from fastapi import APIRouter, Depends, UploadFile, File, Query, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -142,13 +143,13 @@ def get_document_segments(
 @router.get(
     "/{document_id}/download",
     summary="Download original file",
-    description="Streams the original uploaded file from storage.",
+    description="Streams the original uploaded file from storage or persistent database backup.",
 )
 def download_document(
     document_id: str,
     db: Session = Depends(get_db),
 ):
-    """Streams original document file from local storage."""
+    """Streams original document file from local storage or persistent database backup."""
     doc = DocumentService.get_document(db, document_id)
     if not doc:
         raise HTTPException(
@@ -156,16 +157,29 @@ def download_document(
             detail=f"Document with ID '{document_id}' not found.",
         )
 
-    if not os.path.exists(doc.storage_path):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Physical file not found on storage mount.",
+    # 1. Primary: serve from local disk cache if present
+    if os.path.exists(doc.storage_path):
+        return FileResponse(
+            path=doc.storage_path,
+            media_type=doc.content_type,
+            filename=doc.original_filename,
         )
 
-    return FileResponse(
-        path=doc.storage_path,
-        media_type=doc.content_type,
-        filename=doc.original_filename,
+    # 2. Ephemeral container fallback: retrieve from persistent database archive (essential for Render Free resets)
+    file_bytes = DocumentService.get_document_file_bytes(db, doc)
+    if file_bytes is not None:
+        encoded_filename = quote(doc.original_filename)
+        return Response(
+            content=file_bytes,
+            media_type=doc.content_type,
+            headers={
+                "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}",
+            },
+        )
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Physical file not found on storage mount or database archive.",
     )
 
 

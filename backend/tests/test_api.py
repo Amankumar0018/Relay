@@ -81,3 +81,22 @@ def test_dev_engine_pragmas():
 
         journal_mode = conn.execute(text("PRAGMA journal_mode;")).scalar()
         assert journal_mode.lower() == "wal"
+
+
+def test_lifespan_production_fail_fast(monkeypatch):
+    """Verifies that startup fails fast with RuntimeError in production if DB init fails."""
+    from app.main import lifespan, app
+    from app.core.config import settings
+    import pytest
+
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+    def fail_init():
+        raise ConnectionError("Simulated PostgreSQL connection failure")
+    monkeypatch.setattr("app.main.init_db", fail_init)
+
+    with pytest.raises(RuntimeError, match="CRITICAL: Application failed to initialize database in production"):
+        import asyncio
+        async def run_lifespan():
+            async with lifespan(app):
+                pass
+        asyncio.run(run_lifespan())
