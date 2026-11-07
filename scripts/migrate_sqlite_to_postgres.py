@@ -16,8 +16,13 @@ import os
 import sys
 import hashlib
 import sqlite3
+import re
 from datetime import datetime, timezone
 from typing import Dict, List, Tuple, Any
+
+# Ensure unbuffered real-time stdout
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(line_buffering=True)
 
 from sqlalchemy import create_engine, text, MetaData, Table
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -164,6 +169,12 @@ def migrate(target_pg_url: str, sqlite_db_path: str = "backend/relay.db") -> boo
     if target_pg_url.startswith("postgres://"):
         target_pg_url = target_pg_url.replace("postgres://", "postgresql://", 1)
 
+    # PgBouncer pooler on Neon does not support SCRAM channel_binding; strip it if present on pooler URLs
+    if "-pooler." in target_pg_url and "channel_binding=" in target_pg_url:
+        target_pg_url = re.sub(r"[?&]channel_binding=[^&]*", "", target_pg_url)
+        if "?" not in target_pg_url and "&" in target_pg_url:
+            target_pg_url = target_pg_url.replace("&", "?", 1)
+
     print(f"\n1. Connecting to target PostgreSQL...")
     target_engine = create_engine(
         target_pg_url,
@@ -192,8 +203,8 @@ def migrate(target_pg_url: str, sqlite_db_path: str = "backend/relay.db") -> boo
     src_conn.row_factory = sqlite3.Row
     src_cur = src_conn.cursor()
 
-    metadata = MetaData()
-    metadata.reflect(bind=target_engine)
+    # Use in-memory model metadata definitions directly (fast, avoids slow server-side reflection)
+    model_tables = Base.metadata.tables
 
     print("\n3. Migrating relational data & document binaries in topological order...")
     source_counts: Dict[str, int] = {}
@@ -213,7 +224,7 @@ def migrate(target_pg_url: str, sqlite_db_path: str = "backend/relay.db") -> boo
 
         if table_name == "document_contents":
             # Migrate physical files from disk into PostgreSQL document_contents table
-            target_table = metadata.tables["document_contents"]
+            target_table = model_tables["document_contents"]
             doc_rows = src_cur.execute('SELECT id, storage_path, created_at FROM "documents"').fetchall()
             source_counts["document_contents"] = len(doc_rows)
 
@@ -250,11 +261,11 @@ def migrate(target_pg_url: str, sqlite_db_path: str = "backend/relay.db") -> boo
             print(f"  ✓ document_contents: Migrated {len(binary_records)} binary document files into PostgreSQL")
             continue
 
-        if table_name not in metadata.tables:
+        if table_name not in model_tables:
             print(f"  - Skipping {table_name} (not defined in models)")
             continue
 
-        target_table = metadata.tables[table_name]
+        target_table = model_tables[table_name]
 
         # Check if table exists in SQLite
         tbl_check = src_cur.execute(
