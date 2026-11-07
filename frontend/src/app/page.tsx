@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { EvidenceBadge } from "@/components/evidence/EvidenceBadge";
 import { IndustrialCursor } from "@/components/ui/IndustrialCursor";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
+import { ContinuityTopologyRadar } from "@/components/public/ContinuityTopologyRadar";
 import {
   IconArrowRight,
   IconDocument,
@@ -169,132 +170,214 @@ export default function HomePage() {
       <PublicNav />
 
       <main className="flex-1">
-        {/* HERO BANNER & CONTINUITY STATEMENT */}
-        <section className="border-b-2 border-carbon">
-          <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[520px]">
-            {/* Left Column: Asymmetric Brutalist Headline & Editorial Copy */}
-            <div className="lg:col-span-7 p-6 sm:p-10 lg:p-14 flex flex-col justify-between border-b-2 lg:border-b-0 lg:border-r-2 border-carbon bg-raw-paper">
-              <ScrollReveal variant="industrial">
-                <div className="space-y-6">
-                  <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-carbon text-raw-paper text-[11px] font-mono uppercase tracking-widest border border-carbon">
-                    <span className="w-2 h-2 bg-signal-orange" />
-                    <span>ORGANIZATIONAL CONTINUITY ENGINE</span>
-                  </div>
-
-                  <h1 className="font-display font-black text-4xl sm:text-5xl lg:text-6xl uppercase tracking-tighter text-carbon leading-[0.96]">
-                    THE NEXT LEADER
-                    <br />
-                    SHOULD NEVER START
-                    <br />
-                    <span className="text-signal-orange">FROM ZERO.</span>
-                  </h1>
-
-                  <p className="max-w-xl text-sm sm:text-base text-carbon/80 font-sans leading-relaxed">
-                    Relay reconstructs organizational knowledge, decisions, responsibilities, and unresolved risks into a continuous institutional memory.
-                  </p>
-                </div>
-              </ScrollReveal>
-
-              {/* Action row with explicit CTAs */}
-              <ScrollReveal variant="editorial" delay={0.1}>
-                <div className="pt-8 border-t-2 border-carbon/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <Link href="/platform">
-                    <Button variant="signal" size="md" magnetic={true} data-cursor="PLATFORM" className="px-6 py-2.5 text-sm">
-                      Explore the Platform
-                      <IconArrowRight className="ml-2 w-4 h-4" />
-                    </Button>
-                  </Link>
-
-                  <Link href="/app">
-                    <Button variant="outline" size="md" magnetic={true} data-cursor="WORKSPACE" className="px-6 py-2.5 text-sm">
-                      Enter Workspace
-                    </Button>
-                  </Link>
-                </div>
-              </ScrollReveal>
+        {/* =========================================================================
+            MASTER BLUEPRINT HERO FRAME — EXACT ALIGNMENT TO RELAY-BLOG-COVER.PNG
+            ========================================================================= */}
+        <section className="bg-raw-paper p-3 sm:p-5 lg:p-8 border-b-2 sm:border-b-[3px] border-carbon">
+          <div className="max-w-7xl mx-auto border-2 sm:border-[3px] border-carbon bg-[#F6F3EC] shadow-[6px_6px_0px_#171717] relative">
+            {/* Corner Crosshair Ticks */}
+            <div className="absolute -top-2.5 -left-2.5 text-carbon font-mono text-sm font-black pointer-events-none select-none">
+              +
+            </div>
+            <div className="absolute -top-2.5 -right-2.5 text-carbon font-mono text-sm font-black pointer-events-none select-none">
+              +
+            </div>
+            <div className="absolute -bottom-2.5 -left-2.5 text-carbon font-mono text-sm font-black pointer-events-none select-none">
+              +
+            </div>
+            <div className="absolute -bottom-2.5 -right-2.5 text-carbon font-mono text-sm font-black pointer-events-none select-none">
+              +
             </div>
 
-            {/* Right Column: Architectural Knowledge Artifact */}
-            <div className="lg:col-span-5 bg-carbon text-raw-paper p-6 sm:p-8 flex flex-col justify-between">
-              <div className="space-y-5">
-                <div className="flex items-center justify-between border-b border-raw-paper/20 pb-3">
-                  <span className="font-mono text-[11px] uppercase tracking-widest text-raw-paper/70 font-bold">
-                    ARCHITECTURAL CONTINUITY ARTIFACT
-                  </span>
-                  <span className="font-mono text-xs text-signal-orange font-bold uppercase">
-                    LIVE RECONSTRUCTION
-                  </span>
-                </div>
+            {/* TOP UTILITY HEADER BAR */}
+            <div className="px-4 py-3 sm:px-6 sm:py-3.5 border-b-2 sm:border-b-[3px] border-carbon bg-[#F6F3EC] flex flex-wrap items-center justify-between gap-3">
+              {/* Brand Left */}
+              <div className="flex items-center gap-2.5">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-[#F15A24] border-2 border-carbon shadow-[1.5px_1.5px_0px_#171717]" />
+                <span className="font-display font-black text-xl sm:text-2xl uppercase tracking-tighter text-carbon leading-none">
+                  RELAY
+                </span>
+                <span className="font-mono text-[10px] sm:text-[11px] text-carbon/70 uppercase tracking-widest pl-1 sm:pl-2 font-bold">
+                  // CONTINUITY PLATFORM
+                </span>
+              </div>
 
-                {/* Pipeline Progression Navigation */}
-                <div className="space-y-2">
-                  <span className="font-mono text-[10px] text-raw-paper/60 uppercase tracking-wider block">
-                    INTERACTIVE PIPELINE TRACE [SELECT STAGE]:
-                  </span>
-                  <div className="grid grid-cols-5 gap-1 font-mono text-[10px] font-bold">
-                    {(["DOCUMENTS", "FACTS", "DECISIONS", "RESPONSIBILITIES", "CONTINUITY"] as ArtifactStage[]).map((stage, i) => (
+              {/* Status & Hackathon Badge Right */}
+              <div className="flex items-center gap-2 sm:gap-3 font-mono text-[10px] sm:text-[11px]">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-carbon shadow-[1.5px_1.5px_0px_#171717]">
+                  <span className="w-2 h-2 rounded-full bg-[#00C853] animate-pulse" />
+                  <span className="font-bold text-carbon">LOCAL ENGINE :8000 LIVE</span>
+                </div>
+                <a
+                  href="https://github.com/Amankumar0018/Relay"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1 bg-carbon text-white font-bold uppercase tracking-wider hover:bg-[#F15A24] transition-colors border border-carbon shadow-[1.5px_1.5px_0px_#171717]"
+                >
+                  FLIP THE SWITCH HACKATHON
+                </a>
+              </div>
+            </div>
+
+            {/* MAIN SPLIT-SCREEN BLUEPRINT (Left Editorial Narrative + Right Continuity Topology Radar) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
+              {/* LEFT COLUMN: Editorial Value Proposition & Metrics */}
+              <div className="lg:col-span-7 p-6 sm:p-8 lg:p-10 flex flex-col justify-between border-b-2 lg:border-b-0 lg:border-r-2 sm:lg:border-r-[3px] border-carbon bg-[#F6F3EC] space-y-6">
+                <div className="space-y-5">
+                  {/* Category Pill */}
+                  <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-carbon text-white text-[10px] sm:text-[11px] font-mono uppercase tracking-widest border border-carbon shadow-[1px_1px_0px_#000]">
+                    <span className="w-2 h-2 bg-[#F15A24]" />
+                    <span className="font-bold">ENGINEERING ARCHITECTURE &amp; BUILD REPORT</span>
+                  </div>
+
+                  {/* Massive Bold Headline matching reference 3-line layout */}
+                  <h1 className="font-display font-black text-3xl sm:text-4xl md:text-5xl lg:text-[40px] xl:text-[52px] uppercase tracking-tighter text-carbon leading-[0.92]">
+                    <span className="block whitespace-nowrap">THE NEXT LEADER</span>
+                    <span className="block whitespace-nowrap">SHOULDN&apos;T START</span>
+                    <span className="block whitespace-nowrap text-[#F15A24]">FROM ZERO.</span>
+                  </h1>
+
+                  {/* Subtitle */}
+                  <h2 className="font-display font-black text-xs sm:text-sm lg:text-base uppercase tracking-wider text-carbon">
+                    AI-POWERED INSTITUTIONAL MEMORY &amp; LEADERSHIP CONTINUITY
+                  </h2>
+
+                  {/* Body Copy */}
+                  <p className="text-xs sm:text-sm lg:text-[15px] text-carbon/85 font-sans leading-relaxed max-w-xl">
+                    Building an evidence-grounded institutional continuity engine with FastMCP, Switch, and Gemini to reconstruct organizational knowledge, unmask hidden liabilities, and synthesize verifiable handovers.
+                  </p>
+
+                  {/* Interactive Pipeline Bar */}
+                  <div className="p-2 sm:p-2.5 bg-white border-2 border-carbon shadow-brutal flex flex-wrap items-center justify-between gap-1 text-[10px] sm:text-[11px] font-mono font-bold">
+                    {[
+                      { id: "DOCUMENTS", code: "01", label: "DOCUMENTS" },
+                      { id: "FACTS", code: "02", label: "TRIPLES" },
+                      { id: "DECISIONS", code: "03", label: "DECISIONS" },
+                      { id: "RESPONSIBILITIES", code: "04", label: "OWNERSHIP" },
+                      { id: "CONTINUITY", code: "05", label: "CONTINUITY" },
+                    ].map((step, idx) => (
                       <button
-                        key={stage}
-                        onClick={() => setActiveStage(stage)}
-                        className={`p-1.5 text-center border uppercase transition-all ${
-                          activeStage === stage
-                            ? "bg-signal-orange text-raw-paper border-signal-orange shadow-brutal"
-                            : "bg-carbon-surface text-raw-paper/70 border-raw-paper/20 hover:border-raw-paper/60 hover:text-raw-paper"
+                        key={step.id}
+                        onClick={() => setActiveStage(step.id as ArtifactStage)}
+                        className={`flex items-center gap-1 px-1.5 py-0.5 uppercase transition-colors ${
+                          activeStage === step.id
+                            ? "text-[#F15A24] font-black underline underline-offset-4"
+                            : "text-carbon/70 hover:text-carbon"
                         }`}
                       >
-                        <span className="block text-[8px] opacity-75">{`0${i + 1}`}</span>
-                        <span className="truncate block">{stage.slice(0, 4)}</span>
+                        <span>
+                          {step.code} {step.label}
+                        </span>
+                        {idx < 4 && <span className="text-carbon/40 ml-1">▶</span>}
                       </button>
                     ))}
                   </div>
+
+                  {/* Action CTAs */}
+                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                    <Link href="/app">
+                      <Button
+                        variant="signal"
+                        size="md"
+                        magnetic={true}
+                        data-cursor="WORKSPACE"
+                        className="px-5 py-2.5 text-xs sm:text-sm font-mono font-bold uppercase tracking-wider"
+                      >
+                        Enter Workspace
+                        <IconArrowRight className="ml-2 w-4 h-4" />
+                      </Button>
+                    </Link>
+
+                    <Link href="/platform">
+                      <Button
+                        variant="outline"
+                        size="md"
+                        magnetic={true}
+                        data-cursor="PLATFORM"
+                        className="px-5 py-2.5 text-xs sm:text-sm font-mono font-bold uppercase tracking-wider"
+                      >
+                        Explore Platform
+                      </Button>
+                    </Link>
+
+                    <Link href="/docs/blog/relay-technical-build-story.md" target="_blank">
+                      <Button
+                        variant="secondary"
+                        size="md"
+                        magnetic={true}
+                        className="px-4 py-2.5 text-xs sm:text-sm font-mono font-bold uppercase tracking-wider"
+                      >
+                        Build Story
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
 
-                {/* Stage Inspection Box */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeStage}
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.15 }}
-                    className="p-4 border-2 border-raw-paper/20 bg-carbon-surface space-y-3"
-                  >
-                    <div className="flex items-center justify-between border-b border-raw-paper/10 pb-2">
-                      <span className="font-mono text-[11px] text-signal-orange font-bold">
-                        {stageInfo.label}
-                      </span>
-                      <span className="font-mono text-xs font-bold text-raw-paper px-2 py-0.5 bg-carbon border border-raw-paper/20">
-                        {stageInfo.count}
-                      </span>
+                {/* Bottom Three Metric Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t-2 border-carbon/20">
+                  <div className="p-3 bg-white border-2 border-carbon shadow-brutal space-y-1">
+                    <span className="font-mono text-[9px] text-[#F15A24] font-bold block uppercase tracking-wider">
+                      01 // AUTOMATION QA
+                    </span>
+                    <div className="font-display font-black text-lg sm:text-xl uppercase text-carbon leading-none">
+                      229 VERIFIED TESTS
                     </div>
+                    <p className="font-mono text-[10px] text-carbon/70 leading-tight">
+                      Pytest Suite • 0 Failures
+                    </p>
+                  </div>
 
-                    <div>
-                      <h4 className="font-display font-bold text-sm uppercase text-raw-paper">
-                        {stageInfo.tagline}
-                      </h4>
-                      <p className="font-mono text-xs text-raw-paper/80 mt-1 leading-relaxed">
-                        {stageInfo.example}
-                      </p>
+                  <div className="p-3 bg-white border-2 border-carbon shadow-brutal space-y-1">
+                    <span className="font-mono text-[9px] text-[#F15A24] font-bold block uppercase tracking-wider">
+                      02 // MCP PROTOCOL
+                    </span>
+                    <div className="font-display font-black text-lg sm:text-xl uppercase text-carbon leading-none">
+                      5 FASTMCP TOOLS
                     </div>
+                    <p className="font-mono text-[10px] text-carbon/70 leading-tight">
+                      Switch &amp; OpenCode Integration
+                    </p>
+                  </div>
 
-                    <div className="pt-2 border-t border-raw-paper/10 font-mono text-[10px] text-industrial-green-light flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 bg-industrial-green shrink-0" />
-                      <span>{stageInfo.evidence}</span>
+                  <div className="p-3 bg-white border-2 border-carbon shadow-brutal space-y-1">
+                    <span className="font-mono text-[9px] text-[#F15A24] font-bold block uppercase tracking-wider">
+                      03 // DELIVERABLE
+                    </span>
+                    <div className="font-display font-black text-lg sm:text-xl uppercase text-carbon leading-none">
+                      9-CHAPTER DOSSIER
                     </div>
-                  </motion.div>
-                </AnimatePresence>
-
-                {/* System Specs Strip */}
-                <div className="space-y-1.5 font-mono text-xs text-raw-paper/80">
-                  <p>• Local-first persistent SQLite engine (WAL)</p>
-                  <p>• Multi-agent cross-examination with human Switch</p>
-                  <p>• Zero document retention on commercial clouds</p>
+                    <p className="font-mono text-[10px] text-carbon/70 leading-tight">
+                      Day 1–30 Operational Roadmap
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-raw-paper/20 flex items-center justify-between text-xs font-mono text-raw-paper/60">
-                <span>DOCKER CLUSTER</span>
-                <span className="text-signal-orange font-bold">PORT :8000 LIVE</span>
+              {/* RIGHT COLUMN: The Continuity Topology Radar */}
+              <div className="lg:col-span-5 bg-[#111111] flex flex-col justify-between">
+                <ContinuityTopologyRadar activeStage={activeStage} />
+              </div>
+            </div>
+
+            {/* MASTER FRAME BOTTOM FOOTER BAR */}
+            <div className="border-t-2 sm:border-t-[3px] border-carbon bg-[#F6F3EC] px-4 py-2.5 sm:px-6 font-mono text-[10px] sm:text-[11px] text-carbon/80 flex flex-col md:flex-row items-center justify-between gap-2">
+              <div>
+                <span className="font-bold text-carbon">TRACK: </span>
+                <span>BEST BUSINESS WORKFLOW // FLIP THE SWITCH HACKATHON 2026</span>
+              </div>
+              <div className="hidden lg:block text-carbon/70 font-bold">
+                AUTHOR: AMAN KUMAR // FULL-STACK &amp; SYSTEMS ARCHITECT
+              </div>
+              <div>
+                <span className="font-bold text-carbon">GITHUB: </span>
+                <a
+                  href="https://github.com/Amankumar0018/Relay"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#F15A24] font-bold hover:underline"
+                >
+                  GITHUB.COM/AMANKUMAR0018/RELAY
+                </a>
               </div>
             </div>
           </div>
