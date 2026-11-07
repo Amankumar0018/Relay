@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   IconTask,
   IconCheck,
@@ -10,6 +11,7 @@ import {
   IconSearch,
 } from "@/components/ui/Icons";
 import { Button } from "@/components/ui/Button";
+import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { fetchContinuityOverview, ContinuityOverview } from "@/lib/api";
 
 interface Obligation {
@@ -163,161 +165,155 @@ export default function ResponsibilitiesPage() {
   return (
     <div className="space-y-6 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-carbon pb-4">
-        <div>
-          <span className="font-mono text-xs uppercase font-bold text-signal-orange">
-            // OPERATIONAL MATRIX
-          </span>
-          <h2 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight text-carbon">
-            Operational Responsibilities & Obligations
-          </h2>
-          <p className="font-mono text-xs text-carbon/70 uppercase">
-            DIRECTED TRACKING OF MANDATES, DEADLINES, AND PRECURSOR BLOCKERS
-          </p>
-        </div>
+      <ScrollReveal variant="industrial">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-carbon pb-4">
+          <div>
+            <span className="font-mono text-xs uppercase font-bold text-signal-orange block mb-0.5">
+              OPERATIONAL MATRIX
+            </span>
+            <h1 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight text-carbon">
+              Operational Responsibilities & Obligations
+            </h1>
+            <p className="font-mono text-xs text-carbon/70 uppercase mt-0.5">
+              DIRECTED TRACKING OF MANDATES, DEADLINES, AND PRECURSOR BLOCKERS
+            </p>
+          </div>
 
-        <div className="flex items-center gap-2 font-mono text-xs">
-          <span className="px-2 py-1 bg-signal-orange text-raw-paper font-bold uppercase">
-            ACTIVE: {obligations.filter((o) => o.status === "ACTIVE").length}
-          </span>
-          <span className="px-2 py-1 bg-industrial-green text-raw-paper font-bold uppercase">
-            COMPLETED: {obligations.filter((o) => o.status === "COMPLETED").length}
-          </span>
+          <div className="flex items-center gap-3 font-mono text-xs">
+            <span className="px-3 py-1 bg-signal-orange text-raw-paper font-bold uppercase shadow-brutal">
+              ACTIVE: {obligations.filter((o) => o.status === "ACTIVE").length}
+            </span>
+            <span className="px-3 py-1 bg-industrial-green text-raw-paper font-bold uppercase shadow-brutal">
+              COMPLETED: {obligations.filter((o) => o.status === "COMPLETED").length}
+            </span>
+          </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-2 border-carbon bg-raw-paper-light p-3">
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-raw-paper border border-carbon flex-1 max-w-md">
-          <IconSearch size={14} className="text-carbon/60" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search obligations by code, task, or owner..."
-            className="w-full bg-transparent border-none text-xs font-mono text-carbon placeholder:text-carbon/40 focus:outline-none"
-          />
+      <ScrollReveal variant="editorial" delay={0.05}>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-2 border-carbon bg-raw-paper-light p-4 shadow-brutal">
+          <div className="flex items-center gap-3 px-3 py-2 bg-raw-paper border border-carbon flex-1 max-w-md">
+            <IconSearch size={16} className="text-carbon/60" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search obligations by code, task, or owner..."
+              className="w-full bg-transparent border-none text-xs sm:text-sm font-mono text-carbon placeholder:text-carbon/40 focus:outline-none"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 font-mono text-xs">
+            {(["ALL", "ACTIVE", "COMPLETED"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setFilter(tab)}
+                data-cursor="FILTER"
+                className={`px-3 py-1.5 uppercase font-bold border transition-all ${
+                  filter === tab
+                    ? "bg-carbon text-raw-paper border-carbon shadow-brutal"
+                    : "bg-raw-paper text-carbon border-carbon/40 hover:border-carbon hover:bg-concrete/40"
+                }`}
+              >
+                {tab} (
+                {tab === "ALL"
+                  ? obligations.length
+                  : obligations.filter((o) => o.status === tab).length}
+                )
+              </button>
+            ))}
+          </div>
         </div>
+      </ScrollReveal>
 
-        <div className="flex items-center gap-1.5 font-mono text-xs">
-          {(["ALL", "ACTIVE", "COMPLETED"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setFilter(tab)}
-              className={`px-3 py-1 uppercase font-bold border transition-colors ${
-                filter === tab
-                  ? "bg-carbon text-raw-paper border-carbon shadow-brutal"
-                  : "bg-raw-paper text-carbon border-carbon/40 hover:border-carbon"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Obligations Grid */}
+      <div className="space-y-4">
+        {filtered.length === 0 ? (
+          <div className="p-12 text-center border-2 border-carbon bg-raw-paper font-mono text-sm text-carbon/60">
+            No operational commitments matching search filter.
+          </div>
+        ) : (
+          filtered.map((item) => {
+            const isCompleted = item.status === "COMPLETED";
 
-      {/* Main Obligations Table / Grid */}
-      <div className="border-2 border-carbon bg-raw-paper shadow-brutal overflow-hidden divide-y-2 divide-carbon">
-        <div className="p-3.5 bg-raw-paper-light border-b-2 border-carbon flex items-center justify-between text-xs font-mono">
-          <span className="font-bold uppercase text-carbon">
-            DIRECTED TRANSITION OBLIGATIONS REGISTER ({filtered.length})
-          </span>
-          <span className="text-carbon/60 uppercase text-[10px]">
-            ALL ACTIONS ANCHORED TO VERIFIED CITATIONS
-          </span>
-        </div>
+            return (
+              <div
+                key={item.id}
+                className={`p-4 sm:p-5 border-2 border-carbon bg-raw-paper transition-all hover:shadow-brutal hover:-translate-y-0.5 space-y-3 ${
+                  isCompleted ? "opacity-75 bg-concrete/20" : ""
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-carbon/20 pb-3">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <span className="font-mono text-xs px-2 py-0.5 bg-carbon text-raw-paper font-bold">
+                      {item.code}
+                    </span>
+                    <span className="font-mono text-2xs uppercase px-2 py-0.5 border border-carbon text-carbon/80 font-bold">
+                      {item.nature}
+                    </span>
+                    <h3 className="font-display font-black text-sm sm:text-base uppercase text-carbon">
+                      {item.task}
+                    </h3>
+                  </div>
 
-        {filtered.map((item) => {
-          const isCompleted = item.status === "COMPLETED";
-
-          return (
-            <div
-              key={item.id}
-              className={`p-5 transition-colors space-y-3 ${
-                isCompleted
-                  ? "bg-concrete/20 opacity-70"
-                  : "bg-raw-paper-light hover:bg-concrete/40"
-              }`}
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-carbon/20 pb-2">
-                <div className="flex items-center gap-2 font-mono text-xs">
-                  <span className="px-1.5 py-0.5 bg-carbon text-raw-paper font-bold">
-                    {item.code}
-                  </span>
-                  <span className="px-2 py-0.5 border border-carbon bg-raw-paper font-bold uppercase text-[10px]">
-                    {item.nature}
-                  </span>
-                  <span className="text-carbon/60 text-[11px] truncate">
-                    // ORIGIN: {item.originatingDecision}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs font-bold text-signal-orange">
+                      DEADLINE: {item.deadline}
+                    </span>
+                    <button
+                      onClick={() => toggleStatus(item.id)}
+                      data-cursor="TOGGLE"
+                      className={`px-2 py-0.5 font-mono text-2xs font-bold uppercase border transition-colors ${
+                        isCompleted
+                          ? "bg-industrial-green text-raw-paper border-carbon"
+                          : "bg-raw-paper-light text-carbon border-carbon hover:bg-concrete"
+                      }`}
+                    >
+                      {item.status}
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2 font-mono text-xs">
-                  <span className="text-signal-orange font-bold">
-                    DUE: {item.deadline}
-                  </span>
-                  <button
-                    onClick={() => toggleStatus(item.id)}
-                    className={`px-2 py-0.5 text-[10px] font-bold uppercase border transition-colors ${
-                      isCompleted
-                        ? "bg-industrial-green text-raw-paper border-carbon"
-                        : "bg-raw-paper text-carbon border-carbon hover:bg-carbon hover:text-raw-paper"
-                    }`}
-                  >
-                    {isCompleted ? "✓ COMPLETED" : "MARK DONE"}
-                  </button>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
+                  <div className="p-2.5 bg-raw-paper-light border border-carbon space-y-0.5">
+                    <span className="text-2xs text-carbon/60 uppercase block">
+                      ASSIGNED OWNER:
+                    </span>
+                    <span className="font-bold text-carbon text-xs">{item.assignedOwner}</span>
+                  </div>
+
+                  <div className="p-2.5 bg-raw-paper-light border border-carbon space-y-0.5">
+                    <span className="text-2xs text-carbon/60 uppercase block">
+                      INCOMING DELEGATE:
+                    </span>
+                    <span className="font-bold text-carbon text-xs">{item.incomingDelegate}</span>
+                  </div>
+
+                  <div className="p-2.5 bg-raw-paper-light border border-carbon space-y-0.5">
+                    <span className="text-2xs text-carbon/60 uppercase block">
+                      EVIDENCE REFERENCE:
+                    </span>
+                    <span className="font-bold text-carbon truncate block text-xs">
+                      {item.evidenceSource}
+                    </span>
+                  </div>
                 </div>
+
+                {item.dependencies.length > 0 && (
+                  <div className="pt-2 flex flex-wrap items-center gap-2 font-mono text-xs text-carbon/70">
+                    <span className="uppercase font-bold">PRECURSOR PREREQUISITES:</span>
+                    {item.dependencies.map((dep, dIdx) => (
+                      <span key={dIdx} className="px-2 py-0.5 bg-concrete border border-carbon/40">
+                        • {dep}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
-
-              <div>
-                <h3
-                  className={`font-display font-bold text-base sm:text-lg uppercase text-carbon leading-snug ${
-                    isCompleted ? "line-through opacity-70" : ""
-                  }`}
-                >
-                  {item.task}
-                </h3>
-              </div>
-
-              {/* Stakeholders & Precursors */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono text-xs pt-1">
-                <div className="p-2.5 bg-raw-paper border border-carbon space-y-0.5">
-                  <span className="text-[10px] text-carbon/60 uppercase font-bold block">
-                    ASSIGNED OWNER:
-                  </span>
-                  <span className="font-bold text-carbon block truncate">
-                    {item.assignedOwner}
-                  </span>
-                </div>
-
-                <div className="p-2.5 bg-raw-paper border border-carbon space-y-0.5">
-                  <span className="text-[10px] text-carbon/60 uppercase font-bold block">
-                    INCOMING DELEGATE:
-                  </span>
-                  <span className="font-bold text-carbon block truncate">
-                    {item.incomingDelegate}
-                  </span>
-                </div>
-
-                <div className="p-2.5 bg-raw-paper border border-carbon space-y-0.5">
-                  <span className="text-[10px] text-carbon/60 uppercase font-bold block">
-                    PRECURSOR DEPENDENCIES:
-                  </span>
-                  <span className="text-carbon/80 text-[11px] block truncate">
-                    {item.dependencies.join(", ")}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between text-[11px] font-mono text-carbon/60 pt-1">
-                <span>EVIDENCE ANCHOR: {item.evidenceSource}</span>
-                <span className="uppercase text-signal-orange font-bold">
-                  Human Sign-Off Mandatory
-                </span>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </div>
   );

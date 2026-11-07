@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, IBM_Plex_Sans, Space_Mono } from "next/font/google";
 import "./globals.css";
+import { SmoothScroll } from "@/components/ui/SmoothScroll";
 
 const archivo = Archivo({
   subsets: ["latin"],
@@ -42,7 +43,9 @@ export default function RootLayout({
       className={`${archivo.variable} ${ibmPlexSans.variable} ${spaceMono.variable} h-full`}
     >
       <body className="min-h-full bg-raw-paper text-carbon font-sans antialiased selection:bg-signal-orange selection:text-raw-paper">
-        {children}
+        <SmoothScroll>
+          {children}
+        </SmoothScroll>
       </body>
     </html>
   );

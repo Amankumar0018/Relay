@@ -9,6 +9,7 @@ import {
   IconTerminal,
 } from "@/components/ui/Icons";
 import { Button } from "@/components/ui/Button";
+import { ScrollReveal } from "@/components/ui/ScrollReveal";
 
 export default function WorkspaceSettingsPage() {
   const [saved, setSaved] = useState(false);
@@ -22,133 +23,127 @@ export default function WorkspaceSettingsPage() {
   return (
     <div className="space-y-6 max-w-4xl font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-carbon pb-4">
-        <div>
-          <span className="font-mono text-xs uppercase font-bold text-signal-orange">
-            // CONFIGURATION MODULE
-          </span>
-          <h2 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight text-carbon">
-            Workspace Settings & Telemetry
-          </h2>
-          <p className="font-mono text-xs text-carbon/70 uppercase">
-            LOCAL-FIRST DATA SPECIFICATIONS, TRANSITION PARAMETERS, AND REPOSITORY TELEMETRY
-          </p>
-        </div>
-
-        {saved && (
-          <div className="px-3 py-1 bg-industrial-green text-raw-paper font-mono text-xs font-bold border border-carbon flex items-center gap-1.5">
-            <IconCheck size={14} />
-            <span>CONFIG SAVED</span>
-          </div>
-        )}
-      </div>
-
-      <form onSubmit={handleSave} className="space-y-6">
-        {/* Organization Scope */}
-        <div className="border-2 border-carbon bg-raw-paper-light p-6 space-y-4 shadow-brutal">
-          <div className="border-b-2 border-carbon pb-3">
-            <h3 className="font-display font-bold text-base uppercase text-carbon">
-              Organizational Node Parameters
-            </h3>
-            <p className="font-mono text-xs text-carbon/70">
-              Active enterprise entity and transition milestone schedule.
+      <ScrollReveal variant="industrial">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-carbon pb-4">
+          <div>
+            <span className="font-mono text-xs uppercase font-bold text-signal-orange block mb-0.5">
+              CONFIGURATION MODULE
+            </span>
+            <h1 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight text-carbon">
+              Workspace Settings & Telemetry
+            </h1>
+            <p className="font-mono text-xs text-carbon/70 uppercase mt-0.5">
+              LOCAL-FIRST DATA SPECIFICATIONS • TRANSITION PARAMETERS • AUDIT TELEMETRY
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
-            <div className="space-y-1">
-              <label className="font-bold text-carbon uppercase block">
-                ORGANIZATION IDENTIFIER
-              </label>
-              <input
-                type="text"
-                defaultValue="Acme BioSystems Inc."
-                className="w-full p-2.5 bg-raw-paper border-2 border-carbon text-carbon font-mono text-xs focus:outline-none focus:border-signal-orange"
-              />
+          {saved && (
+            <div className="px-3 py-1.5 bg-industrial-green text-raw-paper font-mono text-xs font-bold border border-carbon flex items-center gap-2 shadow-brutal">
+              <IconCheck size={14} />
+              <span>CONFIG SAVED</span>
             </div>
-
-            <div className="space-y-1">
-              <label className="font-bold text-carbon uppercase block">
-                TRANSITION CASE DESIGNATION
-              </label>
-              <input
-                type="text"
-                defaultValue="NODE-04: CSO Executive Transition 2024"
-                className="w-full p-2.5 bg-raw-paper border-2 border-carbon text-carbon font-mono text-xs focus:outline-none focus:border-signal-orange"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="font-bold text-carbon uppercase block">
-                OUTGOING AUTHORITY CONTACT
-              </label>
-              <input
-                type="text"
-                defaultValue="Dr. Eleanor Vance (e.vance@acme-bio.internal)"
-                className="w-full p-2.5 bg-raw-paper border-2 border-carbon text-carbon font-mono text-xs focus:outline-none focus:border-signal-orange"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="font-bold text-carbon uppercase block">
-                INCOMING SUCCESSOR CONTACT
-              </label>
-              <input
-                type="text"
-                defaultValue="Dr. Marcus Thorne (m.thorne@acme-bio.internal)"
-                className="w-full p-2.5 bg-raw-paper border-2 border-carbon text-carbon font-mono text-xs focus:outline-none focus:border-signal-orange"
-              />
-            </div>
-          </div>
+          )}
         </div>
+      </ScrollReveal>
 
-        {/* Database & Storage Telemetry */}
-        <div className="border-2 border-carbon bg-raw-paper-light p-6 space-y-4 shadow-brutal">
-          <div className="border-b-2 border-carbon pb-3 flex items-center justify-between">
-            <div>
-              <h3 className="font-display font-bold text-base uppercase text-carbon">
-                Persistent Database Telemetry
-              </h3>
-              <p className="font-mono text-xs text-carbon/70">
-                Containerized SQLite engine running on Docker host volume.
+      <form onSubmit={handleSave} className="space-y-6">
+        {/* Organization Scope */}
+        <ScrollReveal variant="industrial" delay={0.05}>
+          <div className="border-2 border-carbon bg-raw-paper-light p-5 sm:p-6 space-y-5 shadow-brutal">
+            <div className="border-b-2 border-carbon pb-3">
+              <h2 className="font-display font-black text-lg sm:text-xl uppercase text-carbon">
+                Organizational Node Parameters
+              </h2>
+              <p className="text-xs sm:text-sm text-carbon/70 font-sans mt-0.5">
+                Active enterprise entity and transition milestone schedule.
               </p>
             </div>
-            <span className="font-mono text-xs px-2 py-0.5 bg-industrial-green text-raw-paper font-bold uppercase">
-              LOCAL WAL ENFORCED
-            </span>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+              <div className="space-y-1.5">
+                <label className="font-bold text-carbon uppercase block text-xs">
+                  ORGANIZATION IDENTIFIER
+                </label>
+                <input
+                  type="text"
+                  defaultValue="Acme BioSystems Inc."
+                  className="w-full p-2.5 bg-raw-paper border-2 border-carbon text-carbon font-mono text-xs sm:text-sm focus:outline-none focus:border-signal-orange"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-carbon uppercase block text-xs">
+                  TRANSITION CASE DESIGNATION
+                </label>
+                <input
+                  type="text"
+                  defaultValue="NODE-04: CSO Executive Transition 2024"
+                  className="w-full p-2.5 bg-raw-paper border-2 border-carbon text-carbon font-mono text-xs sm:text-sm focus:outline-none focus:border-signal-orange"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-carbon uppercase block text-xs">
+                  OUTGOING AUTHORITY CONTACT
+                </label>
+                <input
+                  type="text"
+                  defaultValue="Dr. Eleanor Vance (e.vance@acme-bio.internal)"
+                  className="w-full p-2.5 bg-raw-paper border-2 border-carbon text-carbon font-mono text-xs sm:text-sm focus:outline-none focus:border-signal-orange"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-carbon uppercase block text-xs">
+                  INCOMING SUCCESSOR CONTACT
+                </label>
+                <input
+                  type="text"
+                  defaultValue="Dr. Marcus Thorne (m.thorne@acme-bio.internal)"
+                  className="w-full p-2.5 bg-raw-paper border-2 border-carbon text-carbon font-mono text-xs sm:text-sm focus:outline-none focus:border-signal-orange"
+                />
+              </div>
+            </div>
           </div>
+        </ScrollReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
-            <div className="p-3 bg-raw-paper border border-carbon space-y-1">
-              <span className="text-[10px] text-carbon/60 uppercase font-bold block">
-                DATABASE PATH
-              </span >
-              <span className="font-bold text-carbon block">/backend/data/relay.db</span>
-              <span className="text-[10px] text-industrial-green block">Mounted Volume</span>
+        {/* Local-First Architecture Telemetry */}
+        <ScrollReveal variant="editorial" delay={0.1}>
+          <div className="border-2 border-carbon bg-raw-paper p-5 sm:p-6 space-y-5 shadow-brutal font-mono text-xs">
+            <div className="border-b-2 border-carbon pb-3">
+              <h2 className="font-display font-black text-lg sm:text-xl uppercase text-carbon">
+                Persistent Engine Specifications
+              </h2>
+              <p className="text-xs sm:text-sm text-carbon/70 font-sans mt-0.5">
+                Local SQLite database and encryption configuration.
+              </p>
             </div>
 
-            <div className="p-3 bg-raw-paper border border-carbon space-y-1">
-              <span className="text-[10px] text-carbon/60 uppercase font-bold block">
-                JOURNAL MODE
-              </span>
-              <span className="font-bold text-carbon block">WAL (Write-Ahead Log)</span>
-              <span className="text-[10px] text-industrial-green block">Concurrent Reads</span>
-            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3 bg-raw-paper-light border border-carbon space-y-1 shadow-brutal">
+                <span className="text-carbon/60 uppercase block text-2xs">STORAGE ENGINE</span>
+                <span className="font-bold text-sm sm:text-base text-carbon block">SQLite 3.45 (WAL)</span>
+                <span className="text-industrial-green text-2xs block">✓ Active &amp; Consistent</span>
+              </div>
 
-            <div className="p-3 bg-raw-paper border border-carbon space-y-1">
-              <span className="text-[10px] text-carbon/60 uppercase font-bold block">
-                FOREIGN KEYS
-              </span>
-              <span className="font-bold text-carbon block">PRAGMA foreign_keys = ON</span>
-              <span className="text-[10px] text-industrial-green block">Referential Integrity</span>
+              <div className="p-3 bg-raw-paper-light border border-carbon space-y-1 shadow-brutal">
+                <span className="text-carbon/60 uppercase block text-2xs">INTEGRITY HASH</span>
+                <span className="font-bold text-sm sm:text-base text-carbon block">SHA-256 Anchors</span>
+                <span className="text-industrial-green text-2xs block">✓ Cryptographic Verified</span>
+              </div>
+
+              <div className="p-3 bg-raw-paper-light border border-carbon space-y-1 shadow-brutal">
+                <span className="text-carbon/60 uppercase block text-2xs">CLOUD SYNC</span>
+                <span className="font-bold text-sm sm:text-base text-carbon block">Disabled (Local)</span>
+                <span className="text-signal-orange text-2xs block">🔒 Zero-Retention Mode</span>
+              </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
 
-        {/* Save Actions */}
         <div className="flex justify-end pt-2">
-          <Button variant="signal" size="md" type="submit">
-            Save Workspace Configuration
+          <Button variant="signal" size="md" type="submit" magnetic={true} data-cursor="SAVE">
+            Save Configuration Changes
           </Button>
         </div>
       </form>

@@ -24,6 +24,10 @@ const config: Config = {
           hover: "#D94713",
           light: "#FDF0EA",
         },
+        "signal-red": {
+          DEFAULT: "#D32F2F",
+          light: "#FFEBEE",
+        },
         concrete: {
           DEFAULT: "#D5CEBD",
           light: "#E1DBD0",

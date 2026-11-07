@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { WorkspaceSidebar } from "./WorkspaceSidebar";
 import { WorkspaceHeader } from "./WorkspaceHeader";
 import { CommandPalette } from "./CommandPalette";
+import { PageTransition } from "./PageTransition";
+import { IndustrialCursor } from "@/components/ui/IndustrialCursor";
 import { UploadModal } from "@/components/upload/UploadModal";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 
@@ -30,7 +32,10 @@ const WorkspaceLayoutInner: React.FC<WorkspaceLayoutProps> = ({ children }) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-raw-paper text-carbon flex selection:bg-signal-orange selection:text-raw-paper">
+    <div className="min-h-screen bg-raw-paper text-carbon flex selection:bg-signal-orange selection:text-raw-paper relative">
+      {/* Precision Industrial Reticle Cursor (Fine pointer only) */}
+      <IndustrialCursor />
+
       {/* Industrial Sidebar */}
       <WorkspaceSidebar
         isOpen={sidebarOpen}
@@ -44,8 +49,10 @@ const WorkspaceLayoutInner: React.FC<WorkspaceLayoutProps> = ({ children }) => {
           onOpenUpload={() => setUploadModalOpen(true)}
           onOpenCommandPalette={() => setCommandPaletteOpen(true)}
         />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-          {children}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full flex flex-col">
+          <PageTransition>
+            {children}
+          </PageTransition>
         </main>
       </div>
 

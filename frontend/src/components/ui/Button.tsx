@@ -1,9 +1,12 @@
 import React from "react";
+import { Magnetic } from "./Magnetic";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "signal";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
+  magnetic?: boolean;
+  "data-cursor"?: string;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -13,6 +16,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       variant = "primary",
       size = "md",
       isLoading = false,
+      magnetic = false,
       disabled,
       children,
       ...props
@@ -20,19 +24,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const base =
-      "inline-flex items-center justify-center font-sans font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-orange disabled:opacity-40 disabled:cursor-not-allowed select-none cursor-pointer border";
+      "inline-flex items-center justify-center font-sans font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-signal-orange disabled:opacity-40 disabled:cursor-not-allowed select-none cursor-pointer border";
 
     const variants = {
       primary:
-        "bg-carbon text-raw-paper border-carbon hover:bg-carbon-surface hover:shadow-brutal active:translate-x-[1px] active:translate-y-[1px]",
+        "bg-carbon text-raw-paper border-carbon hover:bg-carbon-surface hover:shadow-brutal hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
       signal:
-        "bg-signal-orange text-raw-paper border-carbon shadow-brutal hover:bg-signal-orange-hover active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
+        "bg-signal-orange text-raw-paper border-carbon shadow-brutal hover:bg-signal-orange-hover hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
       secondary:
-        "bg-concrete text-carbon border-carbon hover:bg-raw-paper-light active:translate-x-[1px] active:translate-y-[1px]",
+        "bg-concrete text-carbon border-carbon hover:bg-raw-paper-light hover:border-carbon hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5",
       outline:
-        "bg-raw-paper-light text-carbon border-carbon border-2 hover:bg-concrete active:translate-x-[1px] active:translate-y-[1px]",
+        "bg-raw-paper-light text-carbon border-carbon border-2 hover:bg-concrete hover:shadow-brutal hover:-translate-y-0.5 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none",
       ghost:
-        "bg-transparent text-carbon border-transparent hover:bg-concrete/50",
+        "bg-transparent text-carbon border-transparent hover:bg-concrete/60 hover:text-carbon active:translate-x-0.5 active:translate-y-0.5",
     }[variant];
 
     const sizes = {
@@ -41,7 +45,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       lg: "h-11 px-6 text-sm gap-2.5 uppercase tracking-wider font-mono",
     }[size];
 
-    return (
+    const buttonElement = (
       <button
         ref={ref}
         disabled={disabled || isLoading}
@@ -54,6 +58,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {children}
       </button>
     );
+
+    if (magnetic && !disabled && !isLoading) {
+      return <Magnetic strength={6}>{buttonElement}</Magnetic>;
+    }
+
+    return buttonElement;
   }
 );
 

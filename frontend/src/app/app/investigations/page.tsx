@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import {
   IconInvestigation,
   IconAlert,
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/Icons";
 import { Button } from "@/components/ui/Button";
 import { EvidenceBadge } from "@/components/evidence/EvidenceBadge";
+import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import {
   fetchConflicts,
   triggerIntelligenceAnalysis,
@@ -107,48 +109,44 @@ const INITIAL_FALLBACK_CASES = [
 ];
 
 export default function InvestigationsPage() {
-  const [cases, setCases] = useState<KnowledgeConflict[]>([]);
+  const [cases, setCases] = useState<KnowledgeConflict[]>(INITIAL_FALLBACK_CASES as any);
   const [activeCaseId, setActiveCaseId] = useState<string>("case-01");
-  const [resolutionInput, setResolutionInput] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "OPEN" | "RESOLVED">("ALL");
+  const [resolutionInput, setResolutionInput] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bannerNotice, setBannerNotice] = useState<string | null>(null);
 
-  const loadConflicts = useCallback(async () => {
+  const loadCases = useCallback(async () => {
     try {
       const res = await fetchConflicts();
-      if (res.items.length > 0) {
+      if (res.items && res.items.length > 0) {
         setCases(res.items);
-        if (!activeCaseId || activeCaseId === "case-01") {
-          setActiveCaseId(res.items[0].id);
-        }
-      } else {
-        // Fallback sample cases
-        setCases(INITIAL_FALLBACK_CASES as any);
+        setActiveCaseId((prev) => {
+          const found = res.items.find((c) => c.id === prev);
+          return found ? found.id : res.items[0].id;
+        });
       }
     } catch (err) {
-      console.warn("Failed to load backend conflicts, using default transition cases:", err);
-      setCases(INITIAL_FALLBACK_CASES as any);
+      console.warn("Using fallback cases for investigation desk:", err);
     }
-  }, [activeCaseId]);
+  }, []);
 
   useEffect(() => {
-    loadConflicts();
-  }, [loadConflicts]);
+    loadCases();
+  }, [loadCases]);
 
   const handleScanAnomalies = async () => {
     setIsScanning(true);
-    setBannerNotice("Executing cross-document contradiction & discrepancy analysis...");
-
+    setBannerNotice("Triggering multi-document knowledge graph cross-examination...");
     try {
-      const detected = await triggerIntelligenceAnalysis();
-      setBannerNotice(`Anomaly analysis complete: ${detected.length} matters evaluated.`);
-      await loadConflicts();
+      await triggerIntelligenceAnalysis();
+      await loadCases();
+      setBannerNotice("Anomalies scan complete. Contradictions cross-checked against source records.");
       setTimeout(() => setBannerNotice(null), 4000);
     } catch (err: any) {
       console.error("Scan error:", err);
-      setBannerNotice(`Scan error: ${err.message || "Failed to analyze knowledge conflicts."}`);
+      setBannerNotice(`Scan failed: ${err.message}`);
     } finally {
       setIsScanning(false);
     }
@@ -156,14 +154,14 @@ export default function InvestigationsPage() {
 
   const handleResolveCase = async (id: string) => {
     if (!resolutionInput.trim()) {
-      alert("Please enter a resolution note or signatory justification.");
+      alert("Please provide human sign-off notes or delegation confirmation.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      if (id.startsWith("case-")) {
-        // Mock fallback resolution
+      if (id.startsWith("case-0")) {
+        // Mock fallback update
         setCases((prev) =>
           prev.map((c) =>
             c.id === id
@@ -206,178 +204,219 @@ export default function InvestigationsPage() {
   ).length;
 
   return (
-    <div className="space-y-6 font-sans">
+    <div className="space-y-5 font-sans">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-carbon pb-4">
-        <div>
-          <span className="font-mono text-xs uppercase font-bold text-signal-orange">
-            // SWITCH AUDIT DESK
-          </span>
-          <h2 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight text-carbon">
-            Discrepancies & Conflict Adjudication
-          </h2>
-          <p className="font-mono text-xs text-carbon/70 uppercase">
-            HUMAN-IN-THE-LOOP SWITCH REASONING • CROSS-EXAMINATION OF CONTRADICTIONS
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleScanAnomalies}
-            disabled={isScanning}
-          >
-            <span>{isScanning ? "Scanning Graph..." : "Scan For Anomalies"}</span>
-          </Button>
-
-          <div className="flex items-center gap-2 font-mono text-xs">
-            <span className="px-2.5 py-1 bg-signal-orange text-raw-paper font-bold uppercase border border-carbon">
-              {criticalCount} CRITICAL
+      <ScrollReveal variant="industrial">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-carbon pb-4">
+          <div>
+            <span className="font-mono text-[10px] uppercase font-bold text-signal-orange block mb-0.5">
+              SWITCH AUDIT DESK
             </span>
-            <span className="px-2.5 py-1 bg-carbon text-raw-paper font-bold uppercase border border-carbon">
-              {openCount} OPEN
-            </span>
+            <h1 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight text-carbon">
+              Discrepancies & Conflict Adjudication
+            </h1>
+            <p className="font-mono text-xs text-carbon/70 uppercase mt-0.5">
+              HUMAN-IN-THE-LOOP SWITCH REASONING • CROSS-EXAMINATION OF CONTRADICTIONS
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="outline"
+              size="sm"
+              magnetic={true}
+              onClick={handleScanAnomalies}
+              disabled={isScanning}
+            >
+              <span>{isScanning ? "Scanning Graph..." : "Scan For Anomalies"}</span>
+            </Button>
+
+            <div className="flex items-center gap-2 font-mono text-xs">
+              <span className="px-2.5 py-1 bg-signal-orange text-raw-paper font-bold uppercase border border-carbon shadow-brutal">
+                {criticalCount} CRITICAL
+              </span>
+              <span className="px-2.5 py-1 bg-carbon text-raw-paper font-bold uppercase border border-carbon shadow-brutal">
+                {openCount} OPEN
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
 
       {bannerNotice && (
-        <div className="p-3 bg-carbon text-raw-paper font-mono text-xs border border-carbon flex items-center justify-between">
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          className="p-3 bg-carbon text-raw-paper font-mono text-xs border border-carbon flex items-center justify-between shadow-brutal"
+        >
           <span>{bannerNotice}</span>
-          <button onClick={() => setBannerNotice(null)} className="underline uppercase text-[10px]">
+          <button onClick={() => setBannerNotice(null)} className="underline uppercase text-xs font-bold">
             Dismiss
           </button>
-        </div>
+        </motion.div>
       )}
 
       {/* Filter Tabs */}
-      <div className="flex items-center justify-between border-2 border-carbon bg-raw-paper-light p-2 font-mono text-xs">
-        <div className="flex items-center gap-1.5">
-          {(["ALL", "OPEN", "RESOLVED"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setStatusFilter(tab)}
-              className={`px-3 py-1 uppercase font-bold border transition-colors ${
-                statusFilter === tab
-                  ? "bg-carbon text-raw-paper border-carbon shadow-brutal"
-                  : "bg-raw-paper text-carbon border-carbon/40 hover:border-carbon"
-              }`}
-            >
-              {tab} ({tab === "ALL" ? cases.length : cases.filter((c) => c.status.toUpperCase() === tab).length})
-            </button>
-          ))}
-        </div>
+      <ScrollReveal variant="editorial" delay={0.05}>
+        <div className="flex items-center justify-between border-2 border-carbon bg-raw-paper-light p-2 font-mono text-xs shadow-brutal">
+          <div className="flex items-center gap-1.5">
+            {(["ALL", "OPEN", "RESOLVED"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setStatusFilter(tab)}
+                data-cursor="FILTER"
+                className={`px-3 py-1 uppercase font-bold border transition-all ${
+                  statusFilter === tab
+                    ? "bg-carbon text-raw-paper border-carbon shadow-brutal"
+                    : "bg-raw-paper text-carbon border-carbon/40 hover:border-carbon hover:bg-concrete/40"
+                }`}
+              >
+                {tab} ({tab === "ALL" ? cases.length : cases.filter((c) => c.status.toUpperCase() === tab).length})
+              </button>
+            ))}
+          </div>
 
-        <span className="text-[10px] text-carbon/60 uppercase hidden sm:inline">
-          SWITCH GATEWAY ACTIVE • REQUIRES HUMAN SIGN-OFF
-        </span>
-      </div>
+          <span className="text-[11px] text-carbon/70 uppercase font-mono hidden sm:inline">
+            SWITCH GATEWAY ACTIVE • REQUIRES HUMAN SIGN-OFF
+          </span>
+        </div>
+      </ScrollReveal>
 
       {/* Main Two-Column Split Desk */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Column: Case List (5 cols) */}
         <div className="lg:col-span-5 border-2 border-carbon bg-raw-paper shadow-brutal overflow-hidden divide-y-2 divide-carbon">
-          <div className="p-3.5 bg-raw-paper-light border-b-2 border-carbon flex items-center justify-between text-xs font-mono">
+          <div className="p-3 bg-raw-paper-light border-b-2 border-carbon flex items-center justify-between text-xs font-mono">
             <span className="font-bold uppercase text-carbon">
               ACTIVE CASE LOG ({filteredCases.length})
             </span>
-            <span className="text-carbon/60 uppercase text-[10px]">SELECT TO ADJUDICATE</span>
+            <span className="text-carbon/60 uppercase text-[10px] font-bold">SELECT TO ADJUDICATE</span>
           </div>
 
-          {filteredCases.map((c, idx) => {
-            const isSelected = c.id === activeCaseId;
+          <LayoutGroup id="investigationCasesGroup">
+            <div
+              data-lenis-prevent
+              className="divide-y-2 divide-carbon max-h-[600px] overflow-y-auto"
+            >
+              {filteredCases.map((c, idx) => {
+                const isSelected = c.id === activeCaseId;
 
-            return (
-              <div
-                key={c.id}
-                onClick={() => {
-                  setActiveCaseId(c.id);
-                  setResolutionInput("");
-                }}
-                className={`p-4 cursor-pointer transition-colors space-y-2 ${
-                  isSelected
-                    ? "bg-carbon text-raw-paper"
-                    : "bg-raw-paper-light hover:bg-concrete/40 text-carbon"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`font-mono text-xs px-1.5 py-0.5 font-bold border ${
-                        isSelected
-                          ? "bg-signal-orange text-raw-paper border-raw-paper/30"
-                          : "bg-concrete text-carbon border-carbon"
-                      }`}
-                    >
-                      CASE-BIO-{String(idx + 1).padStart(2, "0")}
-                    </span>
-                    <span
-                      className={`font-mono text-[10px] px-1.5 py-0.5 font-bold uppercase ${
-                        c.severity === "critical"
-                          ? "bg-signal-red text-raw-paper"
-                          : c.severity === "high"
-                          ? "bg-signal-orange text-raw-paper"
-                          : "bg-carbon/20 text-current"
-                      }`}
-                    >
-                      {c.severity}
-                    </span>
-                  </div>
-
-                  <span
-                    className={`font-mono text-[10px] px-2 py-0.5 font-bold uppercase border ${
-                      c.status === "resolved"
-                        ? isSelected
-                          ? "bg-industrial-green-light text-carbon border-transparent"
-                          : "bg-industrial-green text-raw-paper border-carbon"
-                        : isSelected
-                        ? "bg-signal-orange text-raw-paper border-transparent"
-                        : "bg-raw-paper text-carbon border-carbon"
+                return (
+                  <div
+                    key={c.id}
+                    data-cursor="INSPECT"
+                    onClick={() => {
+                      setActiveCaseId(c.id);
+                      setResolutionInput("");
+                    }}
+                    className={`p-3.5 cursor-pointer transition-all space-y-2 relative select-none ${
+                      isSelected
+                        ? "bg-carbon text-raw-paper shadow-inner"
+                        : "bg-raw-paper-light hover:bg-concrete/60 text-carbon hover:translate-x-1"
                     }`}
                   >
-                    {c.status}
-                  </span>
-                </div>
+                    {/* Active sliding indicator */}
+                    {isSelected && (
+                      <motion.div
+                        layoutId="activeCaseCardIndicator"
+                        className="absolute left-0 top-0 bottom-0 w-1.5 bg-signal-orange z-10"
+                        transition={{
+                          type: "spring",
+                          stiffness: 450,
+                          damping: 35,
+                        }}
+                      />
+                    )}
 
-                <h4 className="font-display font-bold text-sm uppercase leading-tight">
-                  {c.title}
-                </h4>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`font-mono text-[10px] px-1.5 py-0.5 font-bold border ${
+                            isSelected
+                              ? "bg-signal-orange text-raw-paper border-raw-paper/30"
+                              : "bg-concrete text-carbon border-carbon"
+                          }`}
+                        >
+                          CASE-BIO-{String(idx + 1).padStart(2, "0")}
+                        </span>
+                        <span
+                          className={`font-mono text-[10px] px-1.5 py-0.5 font-bold uppercase ${
+                            c.severity === "critical"
+                              ? "bg-signal-red text-raw-paper"
+                              : c.severity === "high"
+                              ? "bg-signal-orange text-raw-paper"
+                              : "bg-carbon/20 text-current"
+                          }`}
+                        >
+                          {c.severity}
+                        </span>
+                      </div>
 
-                <p
-                  className={`font-sans text-xs line-clamp-2 ${
-                    isSelected ? "text-raw-paper/80" : "text-carbon/70"
-                  }`}
-                >
-                  {c.description}
-                </p>
+                      <span
+                        className={`font-mono text-[10px] px-2 py-0.5 font-bold uppercase border ${
+                          c.status === "resolved"
+                            ? isSelected
+                              ? "bg-industrial-green-light text-carbon border-transparent"
+                              : "bg-industrial-green text-raw-paper border-carbon"
+                            : isSelected
+                            ? "bg-signal-orange text-raw-paper border-transparent"
+                            : "bg-raw-paper text-carbon border-carbon"
+                        }`}
+                      >
+                        {c.status}
+                      </span>
+                    </div>
 
-                <div
-                  className={`pt-2 border-t flex items-center justify-between font-mono text-[10px] ${
-                    isSelected ? "border-raw-paper/20 text-raw-paper/60" : "border-carbon/20 text-carbon/60"
-                  }`}
-                >
-                  <span>TYPE: {c.conflict_type.toUpperCase()}</span>
-                  <span>{c.document_filename || "Repository"}</span>
-                </div>
-              </div>
-            );
-          })}
+                    <h4 className="font-display font-black text-sm uppercase leading-tight line-clamp-2">
+                      {c.title}
+                    </h4>
+
+                    <p
+                      className={`font-sans text-xs line-clamp-2 leading-relaxed ${
+                        isSelected ? "text-raw-paper/80" : "text-carbon/70"
+                      }`}
+                    >
+                      {c.description}
+                    </p>
+
+                    <div
+                      className={`pt-1.5 border-t flex items-center justify-between font-mono text-[10px] ${
+                        isSelected ? "border-raw-paper/20 text-raw-paper/60" : "border-carbon/20 text-carbon/60"
+                      }`}
+                    >
+                      <span>TYPE: {c.conflict_type.toUpperCase()}</span>
+                      <span className="truncate max-w-[140px]">{c.document_filename || "Repository"}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </LayoutGroup>
         </div>
 
         {/* Right Column: Case Deep Dive & Switch Adjudication (7 cols) */}
-        <div className="lg:col-span-7 border-2 border-carbon bg-raw-paper shadow-brutal space-y-5 p-6">
-          {activeCase ? (
-            <>
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b-2 border-carbon pb-4">
-                <div className="space-y-1">
+        <div
+          data-lenis-prevent
+          className="lg:col-span-7 border-2 border-carbon bg-raw-paper shadow-brutal space-y-4 p-5 min-h-[460px] max-h-[600px] overflow-y-auto"
+        >
+          {activeCase && (
+            <motion.div
+              key={activeCase.id}
+              initial={{ opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-4"
+            >
+              {/* Header Box */}
+              <div className="border-b-2 border-carbon pb-3 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs text-signal-orange font-bold uppercase">
                       // {activeCase.conflict_type.replace("_", " ").toUpperCase()}
                     </span>
                     <span
-                      className={`font-mono text-xs px-2 py-0.5 font-bold ${
+                      className={`font-mono text-[10px] px-2 py-0.5 font-bold uppercase ${
                         activeCase.severity === "critical"
                           ? "bg-signal-red text-raw-paper"
                           : activeCase.severity === "high"
@@ -388,14 +427,9 @@ export default function InvestigationsPage() {
                       SEVERITY: {activeCase.severity.toUpperCase()}
                     </span>
                   </div>
-                  <h3 className="font-display font-black text-lg sm:text-xl uppercase text-carbon leading-snug">
-                    {activeCase.title}
-                  </h3>
-                </div>
 
-                <div className="font-mono text-xs">
                   <span
-                    className={`px-2.5 py-1 font-bold border uppercase ${
+                    className={`font-mono text-xs px-2.5 py-0.5 font-bold border uppercase ${
                       activeCase.status === "resolved"
                         ? "bg-industrial-green text-raw-paper border-carbon"
                         : "bg-signal-orange text-raw-paper border-carbon"
@@ -404,128 +438,114 @@ export default function InvestigationsPage() {
                     STATUS: {activeCase.status.toUpperCase()}
                   </span>
                 </div>
+
+                <h3 className="font-display font-black text-lg uppercase text-carbon leading-snug">
+                  {activeCase.title}
+                </h3>
               </div>
 
               {/* Risk Impact Analysis */}
               <div className="space-y-1">
-                <span className="font-mono text-[10px] uppercase font-bold text-carbon/60">
-                  RISK VECTOR & OPERATIONAL IMPACT
+                <span className="font-mono text-[10px] uppercase font-bold text-carbon/60 block">
+                  RISK VECTOR &amp; OPERATIONAL IMPACT
                 </span>
-                <p className="text-xs text-carbon/90 font-sans leading-relaxed p-3.5 bg-raw-paper-light border border-carbon">
+                <p className="text-xs sm:text-sm text-carbon/90 font-sans leading-relaxed p-3 bg-raw-paper-light border border-carbon shadow-brutal">
                   {activeCase.description}
                 </p>
               </div>
 
-              {/* Verbatim Document Cross-Examination (Side by Side) */}
+              {/* Side-by-Side Citations */}
               <div className="space-y-2">
-                <span className="font-mono text-xs uppercase font-bold text-carbon">
-                  VERBATIM DOCUMENT EVIDENCE CROSS-EXAMINATION
+                <span className="font-mono text-[10px] uppercase font-bold text-carbon/60 block">
+                  VERBATIM EVIDENCE CROSS-EXAMINATION
                 </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Primary Record */}
-                  <div className="p-3.5 bg-raw-paper-light border-l-4 border-carbon font-mono text-xs space-y-1.5">
-                    <span className="text-[10px] text-carbon/60 uppercase font-bold block">
-                      PRIMARY RECORD // {activeCase.document_filename || "Archive Record"}
-                    </span>
-                    <blockquote className="text-carbon leading-relaxed">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
+                  {/* Record A */}
+                  <div className="p-3 bg-raw-paper-light border border-carbon space-y-1.5 shadow-brutal">
+                    <div className="flex items-center justify-between border-b border-carbon/20 pb-1.5">
+                      <span className="font-bold text-carbon uppercase text-[10px]">RECORD A</span>
+                      <EvidenceBadge status="conflicting" size="sm" />
+                    </div>
+                    <blockquote className="text-[11px] text-carbon/90 font-mono italic leading-relaxed">
                       &ldquo;
-                      {activeCase.fact_a?.citations && activeCase.fact_a.citations.length > 0
-                        ? activeCase.fact_a.citations[0].verbatim_quote
-                        : activeCase.fact_a?.statement || activeCase.description}
+                      {activeCase.fact_a?.citations?.[0]?.verbatim_quote ||
+                        activeCase.fact_a?.statement ||
+                        "Primary record assertion on file."}
                       &rdquo;
                     </blockquote>
-                    <span className="text-[10px] text-carbon/50 block">
-                      Location:{" "}
-                      {activeCase.fact_a?.citations && activeCase.fact_a.citations.length > 0
-                        ? activeCase.fact_a.citations[0].source_location
-                        : "Document Segment"}
+                    <span className="text-carbon/60 text-[10px] block pt-1 border-t border-carbon/10 truncate">
+                      SOURCE: {activeCase.document_filename || "Archive Record"}
                     </span>
                   </div>
 
-                  {/* Contradicting Record */}
-                  {activeCase.fact_b ? (
-                    <div className="p-3.5 bg-raw-paper-light border-l-4 border-signal-orange font-mono text-xs space-y-1.5">
-                      <span className="text-[10px] text-signal-orange uppercase font-bold block">
-                        CONTRADICTING / SUPERSEDING RECORD
-                      </span>
-                      <blockquote className="text-carbon leading-relaxed">
-                        &ldquo;
-                        {activeCase.fact_b.citations && activeCase.fact_b.citations.length > 0
-                          ? activeCase.fact_b.citations[0].verbatim_quote
-                          : activeCase.fact_b.statement}
-                        &rdquo;
-                      </blockquote>
-                      <span className="text-[10px] text-carbon/50 block">
-                        Location:{" "}
-                        {activeCase.fact_b.citations && activeCase.fact_b.citations.length > 0
-                          ? activeCase.fact_b.citations[0].source_location
-                          : "Document Segment"}
-                      </span>
+                  {/* Record B */}
+                  <div className="p-3 bg-raw-paper-light border border-carbon space-y-1.5 shadow-brutal">
+                    <div className="flex items-center justify-between border-b border-carbon/20 pb-1.5">
+                      <span className="font-bold text-carbon uppercase text-[10px]">RECORD B</span>
+                      <EvidenceBadge status="missing" size="sm" />
                     </div>
-                  ) : (
-                    <div className="p-3.5 bg-signal-orange/10 border-l-4 border-signal-orange font-mono text-xs space-y-1.5">
-                      <span className="text-[10px] text-signal-orange uppercase font-bold block">
-                        GAP / MISSING COUNTERPART
-                      </span>
-                      <p className="text-carbon leading-relaxed">
-                        This commitment or deadline lacks assigned ownership or documentation in subsequent governance charters.
-                      </p>
-                    </div>
-                  )}
+                    <blockquote className="text-[11px] text-carbon/90 font-mono italic leading-relaxed">
+                      &ldquo;
+                      {activeCase.fact_b?.citations?.[0]?.verbatim_quote ||
+                        activeCase.fact_b?.statement ||
+                        "Contradicting statement or omitted clause detected during cross-examination pass."}
+                      &rdquo;
+                    </blockquote>
+                    <span className="text-carbon/60 text-[10px] block pt-1 border-t border-carbon/10 truncate">
+                      SOURCE: Counterpart Archival Instrument
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Switch Human Resolution Desk Form */}
-              <div className="pt-2 border-t-2 border-carbon space-y-3">
-                <span className="font-mono text-xs uppercase font-bold text-carbon block">
-                  // SWITCH HUMAN RESOLUTION DESK
-                </span>
+              {/* Resolution Form / Notes */}
+              <div className="pt-3 border-t-2 border-carbon space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs uppercase font-bold text-carbon">
+                    HUMAN RESOLUTION SIGN-OFF
+                  </span>
+                  {activeCase.resolved_at && (
+                    <span className="font-mono text-xs text-industrial-green font-bold">
+                      ✓ SIGNED OFF: {new Date(activeCase.resolved_at).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
 
                 {activeCase.status === "resolved" ? (
-                  <div className="p-4 bg-industrial-green text-raw-paper font-mono text-xs border border-carbon space-y-1.5">
-                    <div className="flex items-center justify-between font-bold">
-                      <span>RESOLVED VIA SWITCH • HUMAN-VERIFIED</span>
-                      <IconCheck size={16} />
-                    </div>
-                    <p className="text-raw-paper/90 font-sans">
-                      {activeCase.resolution_notes || "Administrative sign-off completed."}
-                    </p>
-                    <span className="text-[10px] text-raw-paper/70 block">
-                      Logged on{" "}
-                      {activeCase.resolved_at
-                        ? new Date(activeCase.resolved_at).toLocaleString()
-                        : "Today"}{" "}
-                      by Authorized Reviewer
+                  <div className="p-3 bg-industrial-green/10 border-2 border-industrial-green space-y-1">
+                    <span className="font-mono text-xs font-bold text-industrial-green uppercase block">
+                      RESOLUTION RATIFIED INTO AUDIT LEDGER:
                     </span>
+                    <p className="font-sans text-xs text-carbon leading-relaxed">
+                      {activeCase.resolution_notes || "Human administrator ratified the discrepancy resolution."}
+                    </p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <textarea
-                      rows={3}
                       value={resolutionInput}
                       onChange={(e) => setResolutionInput(e.target.value)}
-                      placeholder="Record administrative decision, signatory delegation confirmation, or resolution rationale..."
-                      className="w-full p-3 bg-raw-paper-light border-2 border-carbon text-xs font-mono text-carbon placeholder:text-carbon/40 focus:outline-none focus:border-signal-orange"
+                      placeholder="Enter formal administrative resolution, reassigned authority, or legal clarification..."
+                      rows={2}
+                      className="w-full p-2.5 border-2 border-carbon bg-raw-paper font-sans text-xs text-carbon focus:outline-none focus:border-signal-orange"
                     />
-                    <Button
-                      variant="signal"
-                      size="md"
-                      className="w-full"
-                      onClick={() => handleResolveCase(activeCase.id)}
-                      disabled={isSubmitting}
-                    >
-                      <IconCheck size={14} className="mr-2" />
-                      <span>{isSubmitting ? "Signing Off..." : "Sign Off & Resolve Anomaly via Switch Gate"}</span>
-                    </Button>
+
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="signal"
+                        size="sm"
+                        magnetic={true}
+                        onClick={() => handleResolveCase(activeCase.id)}
+                        disabled={isSubmitting || !resolutionInput.trim()}
+                      >
+                        {isSubmitting ? "Ratifying..." : "Ratify & Sign Off in Switch →"}
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
-            </>
-          ) : (
-            <div className="p-10 text-center font-mono text-xs text-carbon/60">
-              Select a case to inspect evidence.
-            </div>
+            </motion.div>
           )}
         </div>
       </div>

@@ -249,6 +249,7 @@ export interface DossierChapter {
   facts: ExtractedFactDetail[];
   citations: FactCitationDetail[];
   action_items: string[];
+  metadata?: Record<string, any>;
 }
 
 export interface HandoverDossierContent {
@@ -262,6 +263,8 @@ export interface HandoverDossier {
   id: string;
   title: string;
   target_role?: string | null;
+  outgoing_leader?: { id: string; name: string; canonical_name?: string; category?: string } | null;
+  incoming_leader?: { id: string; name: string; canonical_name?: string; category?: string } | null;
   status: string;
   version: number;
   content: HandoverDossierContent;
@@ -483,6 +486,42 @@ export async function resolveConflict(
   }
 
   return (await res.json()) as KnowledgeConflict;
+}
+
+export async function fetchPendingApprovalRequests(): Promise<any[]> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/intelligence/approval-requests/pending`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function adjudicateApprovalRequest(
+  conflictId: string,
+  requestId: string,
+  decision: "approved" | "rejected",
+  sessionToken?: string,
+  operatorSecret?: string,
+  decisionNotes?: string
+): Promise<any> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (sessionToken) headers["X-Mattermost-Token"] = sessionToken;
+  if (operatorSecret) headers["X-Operator-Secret"] = operatorSecret;
+
+  const res = await fetch(`${API_BASE_URL}/api/v1/intelligence/conflicts/${conflictId}/adjudicate`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      request_id: requestId,
+      decision,
+      session_token: sessionToken,
+      decision_notes: decisionNotes,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || `Adjudication failed: ${res.statusText}`);
+  }
+  return res.json();
 }
 
 // Continuity Assessment API
