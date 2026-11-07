@@ -538,7 +538,7 @@ Every tool in Relay's stack was selected to solve a concrete engineering require
 ### 6.1 The Executive Continuity Dashboard
 The primary command center displays real-time continuity scores, dynamic knowledge metrics, and direct alerts for open contradictions.
 
-![Relay Continuity Dashboard](../screenshots/01-dashboard/01-dashboard-overview.png)
+![Relay Continuity Dashboard](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/screenshots/01-dashboard/01-dashboard-overview.png)
 *Figure 1: The Relay Executive Dashboard rendering real-time readiness telemetry, indexed entity counts, and active conflict tallies.*
 
 ---
@@ -548,7 +548,7 @@ Depositing records automatically triggers segmentation and citation anchoring. E
 
 | Document Archive Index | Extracted Evidence & Citations |
 |:---:|:---:|
-| ![Archive Index](../screenshots/02-ingestion/01-document-archive-index.png) | ![Evidence Inspector](../screenshots/02-ingestion/02-document-extracted-evidence.png) |
+| ![Archive Index](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/screenshots/02-ingestion/01-document-archive-index.png) | ![Evidence Inspector](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/screenshots/02-ingestion/02-document-extracted-evidence.png) |
 | *Figure 2: Ingested documents with SHA-256 verification hashes.* | *Figure 3: Inspecting extracted facts linked to character offsets.* |
 
 ---
@@ -558,7 +558,7 @@ Relay cross-examines competing claims side-by-side, displaying exact source docu
 
 | Direct Contradiction Comparison | Unassigned Ownership Gap |
 |:---:|:---:|
-| ![Contradiction Comparison](../screenshots/03-intelligence/02-direct-contradiction-comparison.png) | ![Ownership Gap Detection](../screenshots/03-intelligence/04-ownership-gap-detection.png) |
+| ![Contradiction Comparison](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/screenshots/03-intelligence/02-direct-contradiction-comparison.png) | ![Ownership Gap Detection](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/screenshots/03-intelligence/04-ownership-gap-detection.png) |
 | *Figure 4: Comparing conflicting Odyssey launch dates (Nov 15 vs Dec 20).* | *Figure 5: Highlighting Kubernetes cluster Alpha-9 as an unassigned asset.* |
 
 ---
@@ -568,7 +568,7 @@ An interactive SVG topological radar that maps relationships between people, doc
 
 | Topology Radar Mode | Accessible Entity Ledger Mode |
 |:---:|:---:|
-| ![Continuity Map Radar](../screenshots/master/master_03_continuity_map_radar.png) | ![Continuity Map Ledger](../screenshots/master/master_04_continuity_map_ledger.png) |
+| ![Continuity Map Radar](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/screenshots/master/master_03_continuity_map_radar.png) | ![Continuity Map Ledger](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/screenshots/master/master_04_continuity_map_ledger.png) |
 | *Figure 6: Interactive radar with zoom/pan controls and node subduing focus.* | *Figure 7: Tabular entity ledger offering accessible table navigation.* |
 
 ---
@@ -578,7 +578,7 @@ When an agent requests conflict resolution, human reviewers authenticate server-
 
 | Two-Phase Human Review Screen | Mattermost Reviewer Login |
 |:---:|:---:|
-| ![Human Review Screen](../screenshots/07-human-approval/01-human-approval-review-screen.png) | ![Mattermost Auth Interface](../screenshots/07-human-approval/02-mattermost-auth-interface.png) |
+| ![Human Review Screen](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/screenshots/07-human-approval/01-human-approval-review-screen.png) | ![Mattermost Auth Interface](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/screenshots/07-human-approval/02-mattermost-auth-interface.png) |
 | *Figure 8: Human review desk showing competing claims and evidence.* | *Figure 9: Secure server-to-server Mattermost credential verification.* |
 
 ---
@@ -588,7 +588,7 @@ The platform synthesizes institutional memory into an evidence-backed briefing b
 
 | 9-Chapter Executive Briefing Book | Zero-Hallucination Grounded Q&A |
 |:---:|:---:|
-| ![Handover Dossier](../screenshots/08-handover/01-handover-dossier-overview.png) | ![Grounded QA Desk](../screenshots/09-grounded-qa/01-grounded-qa-sufficient-evidence.png) |
+| ![Handover Dossier](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/screenshots/08-handover/01-handover-dossier-overview.png) | ![Grounded QA Desk](https://raw.githubusercontent.com/Amankumar0018/Relay/main/docs/screenshots/09-grounded-qa/01-grounded-qa-sufficient-evidence.png) |
 | *Figure 10: Chapter navigation across projects, decisions, and roadmaps.* | *Figure 11: Grounded question answering returning verbatim quotations.* |
 
 ---

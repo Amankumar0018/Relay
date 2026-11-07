@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Relay Blog Cover - Engineering Edition</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background-color: #EAE5D8;
+      font-family: 'IBM Plex Sans', sans-serif;
+      color: #171717;
+      position: relative;
+    }
+
+    /* Architectural blueprint background grid */
+    .blueprint-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(to right, rgba(23, 23, 23, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(23, 23, 23, 0.05) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+    }
+
+    /* Precision corner crosshairs */
+    .corner-cross {
+      position: absolute;
+      font-family: 'Space Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: #171717;
+      line-height: 1;
+      user-select: none;
+    }
+    .cc-tl { top: 8px; left: 8px; }
+    .cc-tr { top: 8px; right: 8px; }
+    .cc-bl { bottom: 8px; left: 8px; }
+    .cc-br { bottom: 8px; right: 8px; }
+
+    /* Canvas Frame */
+    .outer-frame {
+      position: absolute;
+      top: 20px;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      border: 3px solid #171717;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background-color: #EAE5D8;
+      box-shadow: 6px 6px 0px #171717;
+    }
+
+    /* Top Navigation / Brand Bar */
+    .brand-header {
+      height: 82px;
+      border-bottom: 3px solid #171717;
+      padding: 0 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #F4F1E8;
+    }
+
+    .brand-logo-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-square {
+      width: 32px;
+      height: 32px;
+      background-color: #F15A24;
+      border: 2px solid #171717;
+      box-shadow: 3px 3px 0px #171717;
+    }
+
+    .brand-title {
+      font-family: 'Archivo', sans-serif;
+      font-weight: 900;
+      font-size: 34px;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      color: #171717;
+      line-height: 1;
+    }
+
+    .brand-subtitle {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(23, 23, 23, 0.7);
+      font-weight: 700;
+      margin-left: 12px;
+    }
+
+    .header-telemetry {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .telemetry-tag {
+      padding: 6px 14px;
+      background: #171717;
+      color: #F4F1E8;
+      border: 1px solid #171717;
+      letter-spacing: 0.08em;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #171717;
+    }
+
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      background-color: #2E7D32;
+      border: 1px solid #171717;
+      border-radius: 50%;
+    }
+
+    /* Main Grid Split */
+    .main-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1060px 1fr;
+      overflow: hidden;
+    }
+
+    /* Left Editorial Column */
+    .editorial-col {
+      padding: 46px 48px 36px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-right: 3px solid #171717;
+      background-color: #EAE5D8;
+    }
+
+    .kicker-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      background-color: #171717;
+      color: #F4F1E8;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      border: 1px solid #171717;
+      width: fit-content;
+    }
+
+    .kicker-square {
+      width: 8px;
+      height: 8px;
+      background-color: #F15A24;
+    }
+
+    .main-headline {
+      font-family: 'Archivo', sans-serif;
+      font-weight: 900;
+      font-size: 80px;
+      line-height: 0.94;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      color: #171717;
+      margin-bottom: 20px;
+    }
+
+    .main-headline .highlight {
+      color: #F15A24;
+    }
+
+    .editorial-subtitle {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-weight: 700;
+      font-size: 23px;
+      color: #171717;
+      letter-spacing: -0.01em;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+
+    .editorial-abstract {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+      color: rgba(23, 23, 23, 0.85);
+      max-width: 940px;
+      margin-bottom: 24px;
+    }
+
+    /* Architectural Pipeline Flow Bar */
+    .pipeline-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background-color: #F4F1E8;
+      border: 2px solid #171717;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      box-shadow: 2px 2px 0px #171717;
+    }
+
+    .pipeline-step {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #171717;
+    }
+
+    .pipeline-step.active {
+      color: #F15A24;
+    }
+
+    .pipeline-arrow {
+      color: rgba(23, 23, 23, 0.4);
+      font-size: 10px;
+    }
+
+    /* 3 Architectural Spec Boxes */
+    .specs-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 2px solid rgba(23, 23, 23, 0.2);
+    }
+
+    .spec-card {
+      background-color: #F4F1E8;
+      border: 2px solid #171717;
+      padding: 14px 16px;
+      box-shadow: 3px 3px 0px #171717;
+    }
+
+    .spec-number {
+      font-family: 'Space Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #F15A24;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .spec-label {
+      font-family: 'Archivo', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      color: #171717;
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+    }
+
+    .spec-detail {
+      font-family: 'Space Mono', monospace;
+      font-size: 10.5px;
+      color: rgba(23, 23, 23, 0.75);
+      margin-top: 4px;
+    }
+
+    /* Right Knowledge Network Column */
+    .network-col {
+      background-color: #171717;
+      color: #F4F1E8;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .network-header {
+      padding: 16px 28px;
+      border-bottom: 2px solid rgba(244, 241, 232, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #1F1F1F;
+    }
+
+    .network-header-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #F4F1E8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .network-header-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #F15A24;
+      text-transform: uppercase;
+    }
+
+    .network-canvas-container {
+      flex: 1;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .network-svg {
+      width: 100%;
+      height: 100%;
+      max-height: 720px;
+    }
+
+    .network-footer {
+      padding: 14px 28px;
+      border-top: 2px solid rgba(244, 241, 232, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: rgba(244, 241, 232, 0.8);
+      background-color: #1F1F1F;
+    }
+
+    .network-footer .highlight-text {
+      color: #FF7043;
+      font-weight: 700;
+    }
+
+    /* Footer Metadata Bar */
+    .cover-footer-bar {
+      height: 46px;
+      border-top: 3px solid #171717;
+      padding: 0 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #DDD7C6;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #171717;
+    }
+  </style>
+</head>
+<body>
+  <div class="blueprint-grid"></div>
+
+  <!-- Precision Corner Registration Crosshairs -->
+  <div class="corner-cross cc-tl">+</div>
+  <div class="corner-cross cc-tr">+</div>
+  <div class="corner-cross cc-bl">+</div>
+  <div class="corner-cross cc-br">+</div>
+
+  <div class="outer-frame">
+    <!-- Header Navigation / Brand -->
+    <header class="brand-header">
+      <div class="brand-logo-group">
+        <div class="brand-square"></div>
+        <div class="brand-title">Relay</div>
+        <div class="brand-subtitle">// CONTINUITY PLATFORM</div>
+      </div>
+      <div class="header-telemetry">
+        <div class="status-indicator">
+          <div class="pulse-dot"></div>
+          <span>LOCAL ENGINE :8000 LIVE</span>
+        </div>
+        <div class="telemetry-tag">FLIP THE SWITCH HACKATHON</div>
+      </div>
+    </header>
+
+    <!-- Main Editorial & Network Grid -->
+    <div class="main-body">
+      <!-- Left Editorial Column -->
+      <section class="editorial-col">
+        <div>
+          <div class="kicker-badge">
+            <div class="kicker-square"></div>
+            <span>ENGINEERING ARCHITECTURE &amp; BUILD REPORT</span>
+          </div>
+
+          <h1 class="main-headline">
+            THE NEXT LEADER<br>
+            SHOULDN'T START<br>
+            <span class="highlight">FROM ZERO.</span>
+          </h1>
+
+          <h2 class="editorial-subtitle">
+            AI-Powered Institutional Memory &amp; Leadership Continuity
+          </h2>
+
+          <p class="editorial-abstract">
+            Building an evidence-grounded institutional continuity engine with FastMCP, Switch, and Gemini to reconstruct organizational knowledge, unmask hidden liabilities, and synthesize verifiable handovers.
+          </p>
+
+          <!-- Architectural Pipeline Flow -->
+          <div class="pipeline-bar">
+            <div class="pipeline-step">
+              <span style="opacity:0.6;">01</span>
+              <span>DOCUMENTS</span>
+            </div>
+            <span class="pipeline-arrow">▶</span>
+            <div class="pipeline-step">
+              <span style="opacity:0.6;">02</span>
+              <span>TRIPLES</span>
+            </div>
+            <span class="pipeline-arrow">▶</span>
+            <div class="pipeline-step">
+              <span style="opacity:0.6;">03</span>
+              <span>DECISIONS</span>
+            </div>
+            <span class="pipeline-arrow">▶</span>
+            <div class="pipeline-step">
+              <span style="opacity:0.6;">04</span>
+              <span>OWNERSHIP</span>
+            </div>
+            <span class="pipeline-arrow">▶</span>
+            <div class="pipeline-step active">
+              <span>05</span>
+              <span>CONTINUITY</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Architectural Spec Cards -->
+        <div class="specs-strip">
+          <div class="spec-card">
+            <span class="spec-number">01 // AUTOMATION QA</span>
+            <div class="spec-label">229 Verified Tests</div>
+            <div class="spec-detail">Pytest Suite • 0 Failures</div>
+          </div>
+
+          <div class="spec-card">
+            <span class="spec-number">02 // MCP PROTOCOL</span>
+            <div class="spec-label">5 FastMCP Tools</div>
+            <div class="spec-detail">Switch &amp; OpenCode Integration</div>
+          </div>
+
+          <div class="spec-card">
+            <span class="spec-number">03 // DELIVERABLE</span>
+            <div class="spec-label">9-Chapter Dossier</div>
+            <div class="spec-detail">Day 1–30 Operational Roadmap</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Knowledge Network Column -->
+      <section class="network-col">
+        <div class="network-header">
+          <div class="network-header-title">
+            <span style="color:#F15A24;">●</span>
+            <span>CONTINUITY TOPOLOGY RADAR</span>
+          </div>
+          <div class="network-header-tag">[LIVE KNOWLEDGE GRAPH]</div>
+        </div>
+
+        <div class="network-canvas-container">
+          <svg class="network-svg" viewBox="0 0 740 680" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="radarSubgrid" width="24" height="24" patternUnits="userSpaceOnUse">
+                <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#262626" stroke-width="0.75" />
+              </pattern>
+            </defs>
+
+            <rect width="740" height="680" fill="url(#radarSubgrid)" />
+
+            <!-- Radar Concentric Rings -->
+            <circle cx="370" cy="340" r="280" stroke="#333333" stroke-width="1" stroke-dasharray="3 4" opacity="0.6" />
+            <circle cx="370" cy="340" r="190" stroke="#333333" stroke-width="1" stroke-dasharray="3 4" opacity="0.6" />
+            <circle cx="370" cy="340" r="100" stroke="#333333" stroke-width="1" stroke-dasharray="3 4" opacity="0.6" />
+
+            <!-- Center Crosshairs -->
+            <line x1="370" y1="20" x2="370" y2="660" stroke="#2E2E2E" stroke-width="1.2" stroke-dasharray="2 3" />
+            <line x1="40" y1="340" x2="700" y2="340" stroke="#2E2E2E" stroke-width="1.2" stroke-dasharray="2 3" />
+
+            <!-- Strata Guidemarks on Left Rail -->
+            <text x="24" y="65" fill="#666666" font-family="'Space Mono', monospace" font-size="10" font-weight="700">01 // ARCHIVES</text>
+            <text x="24" y="215" fill="#666666" font-family="'Space Mono', monospace" font-size="10" font-weight="700">02 // STEWARDS</text>
+            <text x="24" y="380" fill="#666666" font-family="'Space Mono', monospace" font-size="10" font-weight="700">03 // ASSETS</text>
+            <text x="24" y="550" fill="#666666" font-family="'Space Mono', monospace" font-size="10" font-weight="700">04 // ANOMALIES</text>
+
+            <!-- CONNECTING EDGES -->
+            <!-- Doc 01 to Project Odyssey -->
+            <line x1="200" y1="95" x2="370" y2="415" stroke="#777777" stroke-width="1.8" />
+            <!-- Doc 02 to Contradiction -->
+            <line x1="520" y1="95" x2="370" y2="585" stroke="#F15A24" stroke-width="2" stroke-dasharray="4 3" />
+            <!-- Doc 02 to Kubernetes Alpha-9 -->
+            <line x1="520" y1="95" x2="190" y2="415" stroke="#777777" stroke-width="1.5" />
+            <!-- Outgoing Leader to Incoming Successor (Succession Line) -->
+            <line x1="200" y1="240" x2="520" y2="240" stroke="#F15A24" stroke-width="2.5" />
+            <!-- Incoming Successor to Project Odyssey (Ownership) -->
+            <line x1="520" y1="240" x2="370" y2="415" stroke="#777777" stroke-width="2" />
+            <!-- Kubernetes Alpha-9 to Ownership Gap -->
+            <line x1="190" y1="415" x2="190" y2="585" stroke="#F15A24" stroke-width="2.5" stroke-dasharray="4 3" />
+            <!-- Project Odyssey to Contradiction -->
+            <line x1="370" y1="415" x2="370" y2="585" stroke="#F15A24" stroke-width="2.5" stroke-dasharray="4 3" />
+            <!-- Project Aegis to Postponement -->
+            <line x1="550" y1="415" x2="550" y2="585" stroke="#EAE5D8" stroke-width="1.8" stroke-dasharray="4 3" />
+
+            <!-- Edge Label Badges -->
+            <g transform="translate(360, 230)">
+              <rect x="-48" y="-11" width="96" height="22" fill="#EAE5D8" stroke="#171717" stroke-width="1.2" />
+              <text x="0" y="4" text-anchor="middle" fill="#171717" font-family="'Space Mono', monospace" font-size="9" font-weight="700">SUCCESSION</text>
+            </g>
+
+            <g transform="translate(190, 500)">
+              <rect x="-46" y="-11" width="92" height="22" fill="#F15A24" stroke="#171717" stroke-width="1.2" />
+              <text x="0" y="4" text-anchor="middle" fill="#F4F1E8" font-family="'Space Mono', monospace" font-size="9" font-weight="700">UNASSIGNED</text>
+            </g>
+
+            <g transform="translate(370, 500)">
+              <rect x="-54" y="-11" width="108" height="22" fill="#F15A24" stroke="#171717" stroke-width="1.2" />
+              <text x="0" y="4" text-anchor="middle" fill="#F4F1E8" font-family="'Space Mono', monospace" font-size="9" font-weight="700">CONTRADICTION</text>
+            </g>
+
+            <!-- NODES -->
+
+            <!-- NODE: DOC-01 -->
+            <g transform="translate(200, 95)">
+              <rect x="-70" y="-20" width="140" height="40" fill="#D5CEBD" stroke="#F4F1E8" stroke-width="2" />
+              <text x="0" y="-4" text-anchor="middle" fill="#171717" font-family="'Space Mono', monospace" font-size="10" font-weight="700">[DOC-01] ARCHIVE</text>
+              <text x="0" y="11" text-anchor="middle" fill="#171717" font-family="'IBM Plex Sans', sans-serif" font-size="10" font-weight="600">Odyssey Launch Plan</text>
+            </g>
+
+            <!-- NODE: DOC-02 -->
+            <g transform="translate(520, 95)">
+              <rect x="-70" y="-20" width="140" height="40" fill="#D5CEBD" stroke="#F4F1E8" stroke-width="2" />
+              <text x="0" y="-4" text-anchor="middle" fill="#171717" font-family="'Space Mono', monospace" font-size="10" font-weight="700">[DOC-02] ARCHIVE</text>
+              <text x="0" y="11" text-anchor="middle" fill="#171717" font-family="'IBM Plex Sans', sans-serif" font-size="10" font-weight="600">Schedule Amendment</text>
+            </g>
+
+            <!-- NODE: PER-01 (Outgoing Leader) -->
+            <g transform="translate(200, 240)">
+              <rect x="-75" y="-24" width="150" height="48" fill="#F4F1E8" stroke="#171717" stroke-width="2" />
+              <text x="0" y="-6" text-anchor="middle" fill="#F15A24" font-family="'Space Mono', monospace" font-size="10" font-weight="700">[PER-01] OUTGOING</text>
+              <text x="0" y="11" text-anchor="middle" fill="#171717" font-family="'IBM Plex Sans', sans-serif" font-size="12" font-weight="700">Aman Kumar</text>
+            </g>
+
+            <!-- NODE: PER-02 (Incoming Successor) -->
+            <g transform="translate(520, 240)">
+              <rect x="-75" y="-24" width="150" height="48" fill="#F15A24" stroke="#F4F1E8" stroke-width="2.5" />
+              <text x="0" y="-6" text-anchor="middle" fill="#F4F1E8" font-family="'Space Mono', monospace" font-size="10" font-weight="700">[PER-02] SUCCESSOR</text>
+              <text x="0" y="11" text-anchor="middle" fill="#F4F1E8" font-family="'IBM Plex Sans', sans-serif" font-size="12" font-weight="700">Marcus Vance</text>
+            </g>
+
+            <!-- NODE: AST-01 (Kubernetes Alpha-9) -->
+            <g transform="translate(190, 415)">
+              <rect x="-80" y="-22" width="160" height="44" fill="#353C35" stroke="#F4F1E8" stroke-width="2" />
+              <text x="0" y="-5" text-anchor="middle" fill="#F15A24" font-family="'Space Mono', monospace" font-size="10" font-weight="700">[AST-01] ORPHAN ASSET</text>
+              <text x="0" y="11" text-anchor="middle" fill="#F4F1E8" font-family="'IBM Plex Sans', sans-serif" font-size="11" font-weight="600">K8s Cluster Alpha-9</text>
+            </g>
+
+            <!-- NODE: PRJ-01 (Project Odyssey) -->
+            <g transform="translate(370, 415)">
+              <rect x="-75" y="-22" width="150" height="44" fill="#353C35" stroke="#F4F1E8" stroke-width="2" />
+              <text x="0" y="-5" text-anchor="middle" fill="#D5CEBD" font-family="'Space Mono', monospace" font-size="10" font-weight="700">[PRJ-01] INITIATIVE</text>
+              <text x="0" y="11" text-anchor="middle" fill="#F4F1E8" font-family="'IBM Plex Sans', sans-serif" font-size="11" font-weight="600">Project Odyssey</text>
+            </g>
+
+            <!-- NODE: PRJ-02 (Project Aegis) -->
+            <g transform="translate(550, 415)">
+              <rect x="-70" y="-22" width="140" height="44" fill="#353C35" stroke="#F4F1E8" stroke-width="2" />
+              <text x="0" y="-5" text-anchor="middle" fill="#D5CEBD" font-family="'Space Mono', monospace" font-size="10" font-weight="700">[PRJ-02] INITIATIVE</text>
+              <text x="0" y="11" text-anchor="middle" fill="#F4F1E8" font-family="'IBM Plex Sans', sans-serif" font-size="11" font-weight="600">Project Aegis</text>
+            </g>
+
+            <!-- NODE: GAP-01 (Ownership Gap) -->
+            <g transform="translate(190, 585)">
+              <circle cx="0" cy="0" r="28" fill="#171717" stroke="#F15A24" stroke-width="2" stroke-dasharray="3 3" />
+              <rect x="-65" y="-18" width="130" height="36" fill="#F15A24" stroke="#171717" stroke-width="1.5" />
+              <text x="0" y="-3" text-anchor="middle" fill="#171717" font-family="'Space Mono', monospace" font-size="9" font-weight="700">[GAP-01] CRITICAL</text>
+              <text x="0" y="10" text-anchor="middle" fill="#F4F1E8" font-family="'IBM Plex Sans', sans-serif" font-size="10" font-weight="700">No Registered Owner</text>
+            </g>
+
+            <!-- NODE: GAP-02 (Deadline Discrepancy) -->
+            <g transform="translate(370, 585)">
+              <circle cx="0" cy="0" r="28" fill="#171717" stroke="#F15A24" stroke-width="2" stroke-dasharray="3 3" />
+              <rect x="-65" y="-18" width="130" height="36" fill="#F15A24" stroke="#171717" stroke-width="1.5" />
+              <text x="0" y="-3" text-anchor="middle" fill="#171717" font-family="'Space Mono', monospace" font-size="9" font-weight="700">[GAP-02] CONFLICT</text>
+              <text x="0" y="10" text-anchor="middle" fill="#F4F1E8" font-family="'IBM Plex Sans', sans-serif" font-size="10" font-weight="700">Nov 15 vs Dec 20</text>
+            </g>
+
+            <!-- NODE: DEC-01 (Postponed Date) -->
+            <g transform="translate(550, 585)">
+              <rect x="-65" y="-18" width="130" height="36" fill="#1F1F1F" stroke="#EAE5D8" stroke-width="1.5" />
+              <text x="0" y="-3" text-anchor="middle" fill="#D5CEBD" font-family="'Space Mono', monospace" font-size="9" font-weight="700">[DEC-01] SUPERSEDED</text>
+              <text x="0" y="10" text-anchor="middle" fill="#EAE5D8" font-family="'IBM Plex Sans', sans-serif" font-size="10" font-weight="600">Feb 1 Postponement</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="network-footer">
+          <div>TOPOLOGICAL ENGINE: <span class="highlight-text">SQLITE WAL</span> • DETERMINISTIC CITATIONS</div>
+          <div>ZERO CLOUD RETENTION</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Bottom Attribution / Footer Bar -->
+    <footer class="cover-footer-bar">
+      <div>TRACK: BEST BUSINESS WORKFLOW // FLIP THE SWITCH HACKATHON 2026</div>
+      <div>AUTHOR: AMAN KUMAR // FULL-STACK &amp; SYSTEMS ARCHITECT</div>
+      <div>GITHUB: GITHUB.COM/AMANKUMAR0018/RELAY</div>
+    </footer>
+  </div>
+</body>
+</html>
